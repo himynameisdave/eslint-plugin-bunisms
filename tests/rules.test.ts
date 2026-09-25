@@ -7,6 +7,6 @@ import { runRuleTests } from "./run-rule-tests.mjs";
 for (const [version, tester] of [[9, RuleTester], [10, RuleTester10]] as const) {
   tester.describe = describe;
   tester.it = test;
-  tester.itOnly = test.only;
+  tester.itOnly = () => { throw new Error("Focused rule tests are not allowed."); };
   describe(`ESLint ${version}`, () => runRuleTests(tester, plugin));
 }
