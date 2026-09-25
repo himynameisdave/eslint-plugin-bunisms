@@ -1,4 +1,6 @@
 # eslint-plugin-bunisms 🐰
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fhimynameisdave%2Feslint-plugin-bunisms.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fhimynameisdave%2Feslint-plugin-bunisms?ref=badge_shield)
+
 
 ESLint rules for idiomatic and correct Bun code. Supports JavaScript and TypeScript, ESLint 9–10, and Oxlint.
 
@@ -67,3 +69,7 @@ export default [{ ...bun.configs.recommended, files: ['scripts/**/*.js'] }];
 See [Contributing](CONTRIBUTING.md) for development and [the roadmap](docs/roadmap.md) for planned rules.
 
 [MIT](LICENSE) © Dave Lunny
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fhimynameisdave%2Feslint-plugin-bunisms.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fhimynameisdave%2Feslint-plugin-bunisms?ref=badge_large)
