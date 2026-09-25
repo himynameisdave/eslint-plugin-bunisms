@@ -78,4 +78,6 @@ See [Contributing](CONTRIBUTING.md) for development and [the roadmap](docs/roadm
 - [`@himynameisdave/oxlint-config`](https://github.com/himynameisdave/oxlint-config)
 - [`@himynameisdave/oxfmt-config`](https://github.com/himynameisdave/oxfmt-config)
 
-[MIT](LICENSE) © Dave Lunny
+---
+
+<sub>_[MIT](LICENSE) © Dave Lunny_</sub>
