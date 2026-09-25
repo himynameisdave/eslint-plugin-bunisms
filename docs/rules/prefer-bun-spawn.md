@@ -13,9 +13,9 @@ Bun subprocess APIs integrate with Bun streams and offer asynchronous and synchr
 ## Incorrect
 
 ```js
-import { spawn, spawnSync } from "node:child_process";
-spawn("echo", ["hello"]);
-spawnSync("echo", ["hello"]);
+import { spawn, spawnSync } from 'node:child_process';
+spawn('echo', ['hello']);
+spawnSync('echo', ['hello']);
 ```
 
 These examples are valid Node-compatible code; the rule recommends a Bun-specific alternative when the file targets Bun.
@@ -23,9 +23,9 @@ These examples are valid Node-compatible code; the rule recommends a Bun-specifi
 ## Preferred
 
 ```js
-const child = Bun.spawn(["echo", "hello"]);
+const child = Bun.spawn(['echo', 'hello']);
 await child.exited;
-const result = Bun.spawnSync(["echo", "hello"]);
+const result = Bun.spawnSync(['echo', 'hello']);
 ```
 
 ## When not to use it

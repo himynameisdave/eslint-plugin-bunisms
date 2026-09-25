@@ -1,9 +1,9 @@
 // Shared by ESLint RuleTester (Bun and Node) and the real Oxlint CLI.
 export const cases = {};
 for (const [name, methods, modules] of [
-  ["prefer-bun-file", ["readFile"], ["fs", "node:fs", "fs/promises", "node:fs/promises"]],
-  ["prefer-bun-write", ["writeFile"], ["fs", "node:fs", "fs/promises", "node:fs/promises"]],
-  ["prefer-bun-spawn", ["spawn", "spawnSync"], ["child_process", "node:child_process"]],
+  ['prefer-bun-file', ['readFile'], ['fs', 'node:fs', 'fs/promises', 'node:fs/promises']],
+  ['prefer-bun-write', ['writeFile'], ['fs', 'node:fs', 'fs/promises', 'node:fs/promises']],
+  ['prefer-bun-spawn', ['spawn', 'spawnSync'], ['child_process', 'node:child_process']],
 ]) {
   const valid = [];
   const invalid = [];
@@ -19,7 +19,9 @@ for (const [name, methods, modules] of [
         `const { ${method} } = require('${source}'); ${method}('file');`,
         `require('${source}').${method}('file');`,
         `import * as api from '${source}'; api?.${method}?.('file');`,
-      ]) invalid.push({ code, count: 1 });
+      ]) {
+        invalid.push({ code, count: 1 });
+      }
       invalid.push({ code: `import { ${method} as run } from '${source}'; run('a'); run('b');`, count: 2 });
       valid.push(
         `import { ${method} } from '${source}'; function f(${method}) { ${method}(); }`,
@@ -33,15 +35,34 @@ for (const [name, methods, modules] of [
         `import { ${method} } from '${source}'; use(${method});`,
       );
     }
-    valid.push(`function ${method}() {} ${method}();`, `import { ${method} } from 'unrelated'; ${method}();`);
-    invalid.push({ code: `import { ${method} as run } from '${modules[0]}'; const path: string = 'a'; run(path!);`, count: 1, ts: true });
-    valid.push({ code: `import { ${method} } from '${modules[0]}'; function f(${method}: () => void): void { ${method}(); }`, ts: true });
-    valid.push({ code: `import type { ${method} } from '${modules[0]}'; ${method}();`, ts: true });
-    if (modules.includes("fs")) {
-      invalid.push({ code: `import { promises as fs } from 'node:fs'; fs.${method}('a');`, count: 1 });
-      invalid.push({ code: `import fs from 'fs'; fs.promises.${method}('a');`, count: 1 });
+    valid.push(
+      `function ${method}() {} ${method}();`,
+      `import { ${method} } from 'unrelated'; ${method}();`,
+    );
+    invalid.push({
+      code: `import { ${method} as run } from '${modules[0]}'; const path: string = 'a'; run(path!);`,
+      count: 1,
+      ts: true,
+    });
+    valid.push(
+      {
+        code: `import { ${method} } from '${modules[0]}'; function f(${method}: () => void): void { ${method}(); }`,
+        ts: true,
+      },
+      { code: `import type { ${method} } from '${modules[0]}'; ${method}();`, ts: true },
+    );
+    if (modules.includes('fs')) {
+      invalid.push(
+        { code: `import { promises as fs } from 'node:fs'; fs.${method}('a');`, count: 1 },
+        { code: `import fs from 'fs'; fs.promises.${method}('a');`, count: 1 },
+      );
       valid.push(`import fs from 'fs'; fs.${method}Sync('a'); fs.mkdir('a'); fs.appendFile('a', 'b');`);
-    } else valid.push("import cp from 'node:child_process'; cp.exec('ls'); cp.execSync('ls'); cp.fork('a');");
+    } else {
+      valid.push("import cp from 'node:child_process'; cp.exec('ls'); cp.execSync('ls'); cp.fork('a');");
+    }
   }
-  cases[name] = { valid: [...new Set(valid)].map((value) => typeof value === "string" ? { code: value } : value), invalid };
+  cases[name] = {
+    valid: [...new Set(valid)].map((value) => (typeof value === 'string' ? { code: value } : value)),
+    invalid,
+  };
 }
