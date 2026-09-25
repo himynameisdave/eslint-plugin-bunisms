@@ -13,8 +13,8 @@ Bun.write accepts strings, binary data, blobs and responses for Bun-native file 
 ## Incorrect
 
 ```js
-import { writeFile } from "node:fs/promises";
-await writeFile("hello.txt", "Hello!");
+import { writeFile } from 'node:fs/promises';
+await writeFile('hello.txt', 'Hello!');
 ```
 
 These examples are valid Node-compatible code; the rule recommends a Bun-specific alternative when the file targets Bun.
@@ -22,7 +22,7 @@ These examples are valid Node-compatible code; the rule recommends a Bun-specifi
 ## Preferred
 
 ```js
-await Bun.write("hello.txt", "Hello!");
+await Bun.write('hello.txt', 'Hello!');
 ```
 
 ## When not to use it

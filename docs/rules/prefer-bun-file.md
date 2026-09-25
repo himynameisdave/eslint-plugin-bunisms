@@ -13,8 +13,8 @@ Bun files expose text, JSON, binary and streaming readers without requiring the 
 ## Incorrect
 
 ```js
-import { readFile as read } from "node:fs/promises";
-const text = await read("hello.txt", "utf8");
+import { readFile as read } from 'node:fs/promises';
+const text = await read('hello.txt', 'utf8');
 ```
 
 These examples are valid Node-compatible code; the rule recommends a Bun-specific alternative when the file targets Bun.
@@ -22,8 +22,8 @@ These examples are valid Node-compatible code; the rule recommends a Bun-specifi
 ## Preferred
 
 ```js
-const text = await Bun.file("hello.txt").text();
-const bytes = await Bun.file("hello.bin").arrayBuffer();
+const text = await Bun.file('hello.txt').text();
+const bytes = await Bun.file('hello.bin').arrayBuffer();
 ```
 
 ## When not to use it
