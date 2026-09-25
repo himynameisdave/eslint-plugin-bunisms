@@ -14,14 +14,6 @@
 bun add -D eslint-plugin-bunisms
 ```
 
-Not a bun user? It's a regular npm package, so any package manager works:
-
-```bash
-npm install -D eslint-plugin-bunisms
-pnpm add -D eslint-plugin-bunisms
-yarn add -D eslint-plugin-bunisms
-```
-
 You also need `oxlint` or `eslint` installed.
 
 ## Oxlint
