@@ -6,7 +6,7 @@
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fhimynameisdave%2Feslint-plugin-bunisms.svg?type=shield&issueType=license)](https://app.fossa.com/projects/git%2Bgithub.com%2Fhimynameisdave%2Feslint-plugin-bunisms?ref=badge_shield&issueType=license)
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fhimynameisdave%2Feslint-plugin-bunisms.svg?type=shield&issueType=security)](https://app.fossa.com/projects/git%2Bgithub.com%2Fhimynameisdave%2Feslint-plugin-bunisms?ref=badge_shield&issueType=security)
 
-> ESLint rules for idiomatic and correct Bun code. Supports JavaScript and TypeScript, ESLint 9–10, and Oxlint.
+> ESLint rules for idiomatic and correct Bun code. Supports TypeScript and JavaScript, Oxlint, and ESLint 9–10.
 
 ## Installation
 
