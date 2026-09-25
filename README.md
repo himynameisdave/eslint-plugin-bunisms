@@ -1,7 +1,6 @@
 # eslint-plugin-bunisms 🐰
 
 [![npm version](https://img.shields.io/npm/v/eslint-plugin-bunisms.svg)](https://www.npmjs.com/package/eslint-plugin-bunisms)
-[![license](https://img.shields.io/npm/l/eslint-plugin-bunisms.svg)](./LICENSE)
 [![CI](https://github.com/himynameisdave/eslint-plugin-bunisms/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/himynameisdave/eslint-plugin-bunisms/actions/workflows/ci.yml?query=branch%3Amain)
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fhimynameisdave%2Feslint-plugin-bunisms.svg?type=shield&issueType=license)](https://app.fossa.com/projects/git%2Bgithub.com%2Fhimynameisdave%2Feslint-plugin-bunisms?ref=badge_shield&issueType=license)
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fhimynameisdave%2Feslint-plugin-bunisms.svg?type=shield&issueType=security)](https://app.fossa.com/projects/git%2Bgithub.com%2Fhimynameisdave%2Feslint-plugin-bunisms?ref=badge_shield&issueType=security)
