@@ -1,0 +1,71 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  quality:
+    name: Build, lint, types, ESLint and packed consumers
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.4.2'
+      - run: bun install --frozen-lockfile
+      - run: bun run check
+      - uses: actions/upload-artifact@v4
+        with:
+          name: eslint-plugin-bunisms-tarball
+          path: eslint-plugin-bunisms-*.tgz
+          if-no-files-found: error
+  compatibility:
+    name: Node ${{ matrix.node }} / ESLint ${{ matrix.eslint }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { node: '18.18.0', eslint: '9' }
+          - { node: '20.19.0', eslint: '10' }
+          - { node: '22', eslint: '9' }
+          - { node: '22', eslint: '10' }
+          - { node: '24', eslint: '10' }
+    env:
+      ESLINT_MAJOR: ${{ matrix.eslint }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.4.2'
+      - run: bun install --frozen-lockfile
+      - run: bun run build
+      - run: bun run test:node
+      - if: matrix.eslint == '10' && matrix.node == '22'
+        run: bun run test:package
+  oxlint:
+    name: Oxlint compatibility (JavaScript plugin API)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.4.2'
+      - run: bun install --frozen-lockfile
+      - run: bun run build
+      - run: bun run test:oxlint

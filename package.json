@@ -1,0 +1,72 @@
+{
+  "name": "eslint-plugin-bunisms",
+  "version": "0.1.0",
+  "description": "ESLint rules for idiomatic and correct Bun code.",
+  "type": "module",
+  "license": "MIT",
+  "author": "Dave Lunny",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/himynameisdave/eslint-plugin-bunisms.git"
+  },
+  "bugs": "https://github.com/himynameisdave/eslint-plugin-bunisms/issues",
+  "homepage": "https://github.com/himynameisdave/eslint-plugin-bunisms#readme",
+  "keywords": [
+    "eslint",
+    "eslintplugin",
+    "bun",
+    "bunjs",
+    "lint",
+    "linter",
+    "oxlint"
+  ],
+  "engines": {
+    "node": ">=18.18.0"
+  },
+  "packageManager": "bun@1.4.2",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "docs/rules",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": false,
+  "peerDependencies": {
+    "eslint": ">=9.0.0 <11"
+  },
+  "peerDependenciesMeta": {
+    "eslint": {
+      "optional": true
+    }
+  },
+  "scripts": {
+    "build": "bun scripts/build.ts && tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src scripts tests eslint.config.js",
+    "test": "bun test tests/rules.test.ts",
+    "test:node": "node --test tests/node.test.mjs",
+    "test:oxlint": "bun scripts/test-oxlint.ts",
+    "test:package": "bun scripts/test-package.ts",
+    "check": "bun run typecheck && bun run lint && bun run test && bun run build && bun run test:node && bun run test:oxlint && bun run test:package",
+    "prepublishOnly": "bun run check"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9",
+    "@types/bun": "^1.4.2",
+    "@types/estree": "^1.0.9",
+    "@typescript-eslint/parser": "^8.70.1",
+    "eslint10": "npm:eslint@^10",
+    "oxlint": "^1.85.0",
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.70.1",
+    "eslint": "^9.39.5"
+  }
+}
