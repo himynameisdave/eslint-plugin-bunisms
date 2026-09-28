@@ -1,3 +1,4 @@
+import packageJson from '../package.json' with { type: 'json' };
 import preferBunFile from './rules/prefer-bun-file.js';
 import preferBunSpawn from './rules/prefer-bun-spawn.js';
 import preferBunWrite from './rules/prefer-bun-write.js';
@@ -11,7 +12,7 @@ const rules = {
 };
 type Preset = 'recommended' | 'strict' | 'all';
 const plugin: ESLint.Plugin & { rules: typeof rules; configs: Record<Preset, Linter.Config> } = {
-  meta: { name: 'eslint-plugin-bunisms', version: '0.1.0' },
+  meta: { name: 'eslint-plugin-bunisms', version: packageJson.version },
   rules,
   configs: {} as Record<Preset, Linter.Config>,
 };
