@@ -13,7 +13,18 @@ export function runRuleTests(RuleTester, plugin) {
       valid: suite.valid.map(parse),
       invalid: suite.invalid.map((item) =>
         Object.assign(parse(item), {
-          errors: Array.from({ length: item.count }, () => ({ messageId: 'preferBun' })),
+          errors:
+            name === 'prefer-import-meta-path'
+              ? [...item.code.matchAll(/(?:require\('[^']+'\)\.)?[\w$.]+\(import\.meta\.url\)/gu)].map(
+                  (match) => ({
+                    messageId: 'preferImportMetaPath',
+                    line: 1,
+                    column: match.index + 1,
+                    endLine: 1,
+                    endColumn: match.index + match[0].length + 1,
+                  }),
+                )
+              : Array.from({ length: item.count }, () => ({ messageId: 'preferBun' })),
           output: null,
         }),
       ),

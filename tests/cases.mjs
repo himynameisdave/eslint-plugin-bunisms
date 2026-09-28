@@ -66,3 +66,44 @@ for (const [name, methods, modules] of [
     invalid,
   };
 }
+const importMetaPath = {
+  valid: [
+    'fileURLToPath(otherUrl);',
+    "import { fileURLToPath } from 'unrelated'; fileURLToPath(import.meta.url);",
+    'function fileURLToPath(value) {} fileURLToPath(import.meta.url);',
+    "import { fileURLToPath } from 'node:url'; function f(fileURLToPath) { fileURLToPath(import.meta.url); }",
+    "import { fileURLToPath as toPath } from 'node:url'; function f(toPath) { toPath(import.meta.url); }",
+    "import { fileURLToPath } from 'node:url'; const shadow = { fileURLToPath(value) {} }; shadow.fileURLToPath(import.meta.url);",
+    "import { fileURLToPath } from 'node:url'; fileURLToPath(import.meta['url']);",
+    "import { fileURLToPath } from 'node:url'; fileURLToPath(other.meta.url);",
+    "import { fileURLToPath } from 'node:url'; fileURLToPath(import.meta.url, { windows: true });",
+    { code: "import type { fileURLToPath } from 'node:url'; fileURLToPath(import.meta.url);", ts: true },
+    {
+      code: "import { fileURLToPath } from 'node:url'; function f(fileURLToPath: (url: string) => string) { fileURLToPath(import.meta.url); }",
+      ts: true,
+    },
+  ],
+  invalid: [
+    "import { fileURLToPath } from 'url'; fileURLToPath(import.meta.url);",
+    "import { fileURLToPath } from 'node:url'; fileURLToPath(import.meta.url);",
+    "import { fileURLToPath as toPath } from 'node:url'; toPath(import.meta.url);",
+    "import * as url from 'node:url'; url.fileURLToPath(import.meta.url);",
+    "import url from 'node:url'; url.fileURLToPath(import.meta.url);",
+    "const url = require('node:url'); url.fileURLToPath(import.meta.url);",
+    "const { fileURLToPath } = require('url'); fileURLToPath(import.meta.url);",
+    "require('node:url').fileURLToPath(import.meta.url);",
+    "import { fileURLToPath } from 'node:url'; fileURLToPath(import.meta.url); fileURLToPath(import.meta.url);",
+    { code: "import { fileURLToPath } from 'node:url'; fileURLToPath(import.meta.url);", ts: true },
+  ].map((entry) => ({
+    code: typeof entry === 'string' ? entry : entry.code,
+    ts: typeof entry === 'string' ? undefined : entry.ts,
+    count:
+      (typeof entry === 'string' ? entry : entry.code).match(
+        /(?:require\('[^']+'\)\.)?[\w$.]+\(import\.meta\.url\)/gu,
+      )?.length ?? 1,
+  })),
+};
+importMetaPath.valid = importMetaPath.valid.map((entry) =>
+  typeof entry === 'string' ? { code: entry } : entry,
+);
+cases['prefer-import-meta-path'] = importMetaPath;

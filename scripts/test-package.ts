@@ -36,7 +36,7 @@ try {
     'node',
     '--input-type=module',
     '-e',
-    "import plugin from 'eslint-plugin-bunisms'; if(Object.keys(plugin.rules).length !== 3) process.exit(1)",
+    "import plugin from 'eslint-plugin-bunisms'; if(Object.keys(plugin.rules).length !== 4) process.exit(1)",
   ]);
   const pkg = JSON.parse(await readFile(join(root, 'package.json'), 'utf8'));
   // Install real consumers only after proving the package works without ESLint.
@@ -67,6 +67,7 @@ try {
     assert.equal(file.errorCount, 0);
     assert.deepEqual(file.messages.map((message: { ruleId: string }) => message.ruleId).toSorted(), [
       'bun/prefer-bun-file',
+      'bun/prefer-import-meta-path',
       'bun/prefer-bun-spawn',
       'bun/prefer-bun-spawn',
       'bun/prefer-bun-write',
@@ -79,9 +80,9 @@ try {
       join(directory, 'oxlint-project'),
     ),
   );
-  assert.equal(oxlintOutput.diagnostics.length, 8);
+  assert.equal(oxlintOutput.diagnostics.length, 10);
   for (const diagnostic of oxlintOutput.diagnostics) {
-    assert.match(diagnostic.code, /^bun\(prefer-bun-(?:file|write|spawn)\)$/u);
+    assert.match(diagnostic.code, /^bun\(prefer-(?:bun-(?:file|write|spawn)|import-meta-path)\)$/u);
   }
   await writeFile(
     join(directory, 'consumer.mts'),
