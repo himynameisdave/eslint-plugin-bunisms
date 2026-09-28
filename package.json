@@ -21,9 +21,8 @@
   },
   "files": [
     "dist",
-    "docs",
+    "docs/rules",
     "README.md",
-    "CONTRIBUTING.md",
     "LICENSE"
   ],
   "type": "module",
