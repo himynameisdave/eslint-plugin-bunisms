@@ -1,6 +1,6 @@
 # Publishing to npm
 
-Run releases from **Actions → Release → Run workflow** on `main`, then choose a patch, minor, or major bump. The workflow runs all checks, bumps both version references, publishes to npm with trusted publishing (OIDC), pushes a bare numeric version tag (for example `0.2.0`), and creates a GitHub release. No `v` prefix is used for tags or GitHub release names.
+Run releases from **Actions → Release → Run workflow** on `main`, then choose a patch, minor, or major bump according to the [versioning guide](VERSIONING.md). The workflow runs all checks, bumps both version references, publishes to npm with trusted publishing (OIDC), pushes a bare numeric version tag (for example `0.2.0`), and creates a GitHub release. No `v` prefix is used for tags or GitHub release names.
 
 ## One-time setup: first npm publish
 

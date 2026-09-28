@@ -70,7 +70,7 @@ Apply the plugin only to code intended for Bun. For a mixed-runtime project, sco
 export default [{ ...bun.configs.recommended, files: ['scripts/**/*.ts'] }];
 ```
 
-See [Contributing](CONTRIBUTING.md) for development and [the roadmap](https://github.com/himynameisdave/eslint-plugin-bunisms/blob/main/docs/roadmap.md) for planned rules.
+See [Contributing](CONTRIBUTING.md) for development, [the roadmap](https://github.com/himynameisdave/eslint-plugin-bunisms/blob/main/docs/roadmap.md) for planned rules, and [Versioning](https://github.com/himynameisdave/eslint-plugin-bunisms/blob/main/VERSIONING.md) for the release policy.
 
 ## See also
 
