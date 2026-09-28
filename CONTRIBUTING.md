@@ -22,6 +22,9 @@ bun install --frozen-lockfile
 bun run check
 ```
 
+Installing dependencies also enables the repository's pre-commit hook. It runs
+the formatter and linter before each commit.
+
 Rules are in `src/rules`, their tests are in `tests`, and their documentation is
 in `docs/rules`. Add focused tests and documentation with rule changes. Before
 submitting a pull request, run `bun run check`; use `bun run lint:fix` and
