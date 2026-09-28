@@ -67,10 +67,10 @@ try {
     assert.equal(file.errorCount, 0);
     assert.deepEqual(file.messages.map((message: { ruleId: string }) => message.ruleId).toSorted(), [
       'bun/prefer-bun-file',
-      'bun/prefer-import-meta-path',
       'bun/prefer-bun-spawn',
       'bun/prefer-bun-spawn',
       'bun/prefer-bun-write',
+      'bun/prefer-import-meta-path',
     ]);
   }
   assert.equal(eslintOutput.length, 2);
