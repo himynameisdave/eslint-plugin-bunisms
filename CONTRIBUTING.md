@@ -28,3 +28,7 @@ submitting a pull request, run `bun run check`; use `bun run lint:fix` and
 `bun run format` to apply routine fixes.
 
 Thank you for improving the project for everyone.
+
+## Releases
+
+See [PUBLISHING.md](PUBLISHING.md) for the npm setup and release workflow. No post-0.1.0 rules belong in the initial release.
