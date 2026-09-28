@@ -1,50 +1,48 @@
-# bun/prefer-bun-file
+# prefer-bun-file
 
-## What it does
+📝 Prefer `Bun.file()` over the corresponding Node.js APIs.
 
-Recognizes `readFile()` from `fs` and `fs/promises`, including `fs.promises.readFile()`. It does not report `readFileSync`, streams, directory operations, or unrelated functions.
+⚠️ This rule _warns_ in the following [configs](https://github.com/himynameisdave/eslint-plugin-bunisms#eslint): ✅ `recommended`, 🔒 `strict`, 🌐 `all`.
 
-Named, aliased, default and namespace imports are supported, with either bare or `node:` module names. CommonJS direct calls and `const` require bindings (including destructuring) are supported. Lexical shadowing and visible binding/module-property mutations suppress reports. Dynamic imports, indirect aliases, mutable CommonJS declarations and interprocedural mutation tracking are not supported.
+[`Bun.file()`](https://bun.sh/docs/runtime/file-io) exposes text, JSON, binary and streaming readers without needing the Node filesystem API.
 
-## Why
+This rule reports [`readFile()`](https://nodejs.org/api/fs.html) from `fs` and `fs/promises`, including `fs.promises.readFile()`. It does not report `readFileSync`, streams, directory operations or unrelated functions.
 
-Bun files expose text, JSON, binary and streaming readers without requiring the Node filesystem API.
+Named, aliased, default and namespace imports are supported, with either bare or `node:` module names. CommonJS direct calls and `const` require bindings (including destructuring) are supported. Lexical shadowing and visible binding/module-property mutations suppress reports. Dynamic imports, indirect aliases, mutable CommonJS declarations and interprocedural mutation tracking are not supported. Only actual calls report; unused imports or function references do not.
 
-## Incorrect
+The rule reports without a fix, because the APIs are not drop-in replacements. `Bun.file()` creates a lazy file object; reading requires `.text()`, `.json()`, `.arrayBuffer()` or another reader, and its binary result is not a Node `Buffer`. Keep the Node API when the module must also run under Node, when callback behavior is required, or when encodings, options or file descriptors need Node-specific handling. Disable the rule for such files or scope the preset to Bun-only code.
+
+## Examples
 
 ```js
-import { readFile as read } from 'node:fs/promises';
-const text = await read('hello.txt', 'utf8');
+// ❌
+import { readFile } from 'node:fs/promises';
+const text = await readFile('hello.txt', 'utf8');
+
+// ✅
+const text = await Bun.file('hello.txt').text();
 ```
 
-These examples are valid Node-compatible code; the rule recommends a Bun-specific alternative when the file targets Bun.
-
-## Preferred
-
 ```js
-const text = await Bun.file('hello.txt').text();
+// ❌
+import fs from 'node:fs';
+const bytes = await fs.promises.readFile('hello.bin');
+
+// ✅
 const bytes = await Bun.file('hello.bin').arrayBuffer();
 ```
 
-## When not to use it
+```js
+// ❌
+const { readFile } = require('fs/promises');
+const config = JSON.parse(await readFile('config.json', 'utf8'));
 
-Keep Node APIs when the module must also run under Node, when callback behavior is required, or when encodings/options or file descriptors need Node-specific handling. `Bun.file()` creates a lazy file object; reading requires `.text()`, `.json()`, `.arrayBuffer()` or another reader. Its binary result is not automatically a Node Buffer. Callback calls are advisory reports, not drop-in replacements.
+// ✅
+const config = await Bun.file('config.json').json();
+```
 
-Disable the rule for such files or scope the preset to Bun-only code. Only actual calls report; unused imports or function references do not.
-
-## Options
-
-None. All three presets enable this rule as a warning in 0.1.0.
-
-## Suggestions / autofix behavior
-
-Diagnostic only. There are no editor suggestions or automatic fixes. The diagnostic names the exact Bun alternative (Bun.file()).
-
-## Bun compatibility
-
-Targets Bun >=1.4.0. Bun is not required to execute the plugin; ESLint can run under Node.
-
-## References
-
-- [Official Bun API documentation](https://bun.sh/docs/runtime/file-io)
-- [Node API documentation](https://nodejs.org/api/fs.html)
+```js
+// ✅
+import { readFileSync } from 'node:fs';
+const text = readFileSync('hello.txt', 'utf8');
+```
