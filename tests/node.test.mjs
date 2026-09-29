@@ -24,5 +24,11 @@ for (const preset of ['recommended', 'strict', 'all']) {
     assert.equal(result.messages.length, 1);
     assert.equal(result.messages[0].ruleId, 'bun/prefer-bun-file');
     assert.equal(result.messages[0].severity, 1);
+    const [metaPathResult] = await eslint.lintText(
+      "import { fileURLToPath } from 'node:url'; fileURLToPath(import.meta.url);",
+    );
+    assert.equal(metaPathResult.messages.length, 1);
+    assert.equal(metaPathResult.messages[0].ruleId, 'bun/prefer-import-meta-path');
+    assert.equal(metaPathResult.messages[0].severity, 1);
   });
 }

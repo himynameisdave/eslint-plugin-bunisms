@@ -27,6 +27,7 @@ export default defineConfig({
     'bun/prefer-bun-file': 'warn',
     'bun/prefer-bun-write': 'warn',
     'bun/prefer-bun-spawn': 'warn',
+    'bun/prefer-import-meta-path': 'warn',
   },
 });
 ```
@@ -46,15 +47,16 @@ ESLint needs [`jiti`](https://github.com/unjs/jiti) to load a TypeScript config 
 
 ## Rules
 
-| Rule                                                   | Recommends                                                                 |
-| ------------------------------------------------------ | -------------------------------------------------------------------------- |
-| [bun/prefer-bun-file](docs/rules/prefer-bun-file.md)   | `Bun.file()` instead of Node's `readFile()`                                |
-| [bun/prefer-bun-write](docs/rules/prefer-bun-write.md) | `Bun.write()` instead of Node's `writeFile()`                              |
-| [bun/prefer-bun-spawn](docs/rules/prefer-bun-spawn.md) | `Bun.spawn()` / `Bun.spawnSync()` instead of Node's subprocess equivalents |
+| Rule                                                                 | Recommends                                                                 |
+| -------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| [bun/prefer-bun-file](docs/rules/prefer-bun-file.md)                 | `Bun.file()` instead of Node's `readFile()`                                |
+| [bun/prefer-bun-write](docs/rules/prefer-bun-write.md)               | `Bun.write()` instead of Node's `writeFile()`                              |
+| [bun/prefer-bun-spawn](docs/rules/prefer-bun-spawn.md)               | `Bun.spawn()` / `Bun.spawnSync()` instead of Node's subprocess equivalents |
+| [bun/prefer-import-meta-path](docs/rules/prefer-import-meta-path.md) | `import.meta.path` instead of `fileURLToPath(import.meta.url)`             |
 
 Rules recognize imports, aliases and CommonJS bindings, respecting lexical scope. They report calls without automatically rewriting them: Node and Bun APIs have different options and return values.
 
-The `recommended`, `strict` and `all` ESLint presets currently enable all three rules as warnings. Override individual rules after the preset:
+The `recommended`, `strict` and `all` ESLint presets currently enable all four rules as warnings. Override individual rules after the preset:
 
 ```ts
 export default [bun.configs.recommended, { rules: { 'bun/prefer-bun-file': 'error' } }];

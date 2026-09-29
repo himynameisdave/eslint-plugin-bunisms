@@ -45,7 +45,11 @@ try {
   const { diagnostics } = JSON.parse(output);
   const actual = new Map<string, number>();
   for (const diagnostic of diagnostics) {
-    assert.match(diagnostic.code, /bun\(prefer-bun-(?:file|write|spawn)\)/u, JSON.stringify(diagnostic));
+    assert.match(
+      diagnostic.code,
+      /bun\(prefer-(?:bun-(?:file|write|spawn)|import-meta-path)\)/u,
+      JSON.stringify(diagnostic),
+    );
     const file = resolve(diagnostic.filename);
     actual.set(file, (actual.get(file) ?? 0) + 1);
   }
