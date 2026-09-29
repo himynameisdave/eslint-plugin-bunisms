@@ -192,3 +192,73 @@ cases['prefer-import-meta-dir'] = {
   ),
   invalid: dirInvalid,
 };
+
+const entrypointValid = [
+  'import.meta.main;',
+  'function f(require, module) { return require.main === module; }',
+  'function f(module) { return require.main === module; }',
+  'function f(require) { return module === require.main; }',
+  'function f(Bun) { return import.meta.path === Bun.main; }',
+  'const Bun = { main: "x" }; import.meta.path === Bun.main;',
+  'import Bun from "bun"; import.meta.path === Bun.main;',
+  'import * as Bun from "bun"; import.meta.path === Bun.main;',
+  'import { main as entry } from "bun"; import.meta.path === entry;',
+  'import { createRequire } from "node:module"; const require = createRequire(import.meta.url); require.main === module;',
+  'import module from "module"; require.main === module;',
+  'const req = require; req.main === module;',
+  'const entry = Bun.main; import.meta.path === entry;',
+  'function require() {} require.main === module;',
+  'function module() {} require.main === module;',
+  'require.main === other; module === unrelated.main;',
+  'import.meta.url === Bun.main; import.meta.path === Other.main;',
+  'require[key] === module; import.meta.path === Bun[key];',
+  'require?.main === module; import.meta.path === Bun?.main;',
+  'require.main > module; import.meta.path + Bun.main;',
+  'require.main; Bun.main; module;',
+  '{ const module = {}; require.main === module; }',
+  'import.meta.path === Bun.main; var Bun;',
+];
+const entrypointInvalid = [];
+for (const ts of [false, true]) {
+  for (const operator of ['===', '!==', '==', '!=']) {
+    for (const [left, right] of [
+      ['require.main', 'module'],
+      ['import.meta.path', 'Bun.main'],
+      ["require['main']", 'module'],
+      ["import.meta['path']", "Bun['main']"],
+    ]) {
+      for (const code of [`${left} ${operator} ${right};`, `${right} ${operator} ${left};`]) {
+        entrypointInvalid.push({
+          code,
+          ts,
+          count: 1,
+          errors: [
+            {
+              messageId: 'preferBun',
+              line: 1,
+              column: 1,
+              endLine: 1,
+              endColumn: code.length,
+              suggestions: [],
+            },
+          ],
+        });
+      }
+    }
+  }
+}
+entrypointInvalid.push(
+  {
+    code: 'require.main === module;\nimport.meta.path !== Bun.main;',
+    count: 2,
+    errors: [
+      { messageId: 'preferBun', line: 1, column: 1, endLine: 1, endColumn: 24 },
+      { messageId: 'preferBun', line: 2, column: 1, endLine: 2, endColumn: 30 },
+    ],
+  },
+  { code: 'require.main === module;', sourceType: 'commonjs', count: 1 },
+);
+cases['prefer-import-meta-main'] = {
+  valid: entrypointValid.flatMap((code) => [{ code }, { code, ts: true }]),
+  invalid: entrypointInvalid,
+};

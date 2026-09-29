@@ -3,7 +3,11 @@ import parser from '@typescript-eslint/parser';
 import { cases } from './cases.mjs';
 const parse = (item) => ({
   code: item.code,
-  ...(item.ts ? { filename: 'test.ts', languageOptions: { parser } } : {}),
+  ...(item.ts ? { filename: 'test.ts' } : {}),
+  languageOptions: {
+    ...(item.sourceType ? { sourceType: item.sourceType } : {}),
+    ...(item.ts ? { parser } : {}),
+  },
 });
 
 export function runRuleTests(RuleTester, plugin) {

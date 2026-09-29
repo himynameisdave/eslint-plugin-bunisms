@@ -37,7 +37,7 @@
   },
   "scripts": {
     "build": "bun scripts/build.ts && tsc -p tsconfig.build.json",
-    "check": "bun run typecheck && bun run lint && bun run format:check && bun run test && bun run build && bun run test:node && bun run test:oxlint && bun run test:package",
+    "check": "bun run typecheck && bun run lint && bun run format:check && bun run test && bun run test:entrypoint && bun run build && bun run test:node && bun run test:oxlint && bun run test:package",
     "format": "oxfmt --write",
     "format:check": "oxfmt --check",
     "lint": "oxlint -c oxlint.config.ts --deny-warnings",
@@ -45,6 +45,7 @@
     "prepare": "git config core.hooksPath .githooks",
     "prepublishOnly": "bun run check",
     "test": "bun test tests/rules.test.ts tests/import-meta-dir.test.ts",
+    "test:entrypoint": "bun scripts/test-entrypoint.ts",
     "test:node": "node --test tests/node.test.mjs",
     "test:oxlint": "bun scripts/test-oxlint.ts",
     "test:package": "bun scripts/test-package.ts",
