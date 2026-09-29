@@ -6,3 +6,6 @@ await readFile('input.txt', 'utf8');
 await writeFile('output.txt', 'hello');
 spawn('echo', ['hello']);
 spawnSync('echo', ['hello']);
+
+import { dirname } from 'node:path';
+const __dirname = dirname(fileURLToPath(import.meta.url));

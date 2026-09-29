@@ -27,3 +27,13 @@ Both diagnostics were reviewed at their call sites. Private application source i
 - Check callback/options/encoding and subprocess differences before migrating code.
 - Confirm CI is green and review the packed file list.
 - Publish and tag only after this testing, following CONTRIBUTING.md.
+
+## prefer-import-meta-dir validation
+
+September 28, 2026: the new rule adds 68 shared JS/TS cases covering positive matches, exact messages and locations, aliases, default/namespace imports, CommonJS bindings in modules, shadowing, mutations, type-only imports and semantic exclusions. ESLint 9 and 10 run the fixtures under Node 22; Oxlint runs the same fixtures through the built plugin. Clean tarball consumers exercise the new rule in JS and TS with both ESLint majors and Oxlint.
+
+Runtime tests passed on Bun 1.4.0 and 1.4.2 on macOS arm64, including spaces, reserved URL characters, Unicode and symlink entry points. The new test is included in `bun run test`. No fix or suggestion is provided; cross-runtime, loader and bundler migrations remain manual.
+
+Read-only review of [Elysia at e037eca](https://github.com/elysiajs/elysia/tree/e037eca710e7ad193be09cc6615ab0dbe54af914) (238 files) and [Bun packages at 9f70da0](https://github.com/oven-sh/bun/tree/9f70da074192e55c3ec68aef7fd982e6b4b0284b/packages) (86 files) found no diagnostics from this rule and no parse errors. This sample establishes no observed false positives; it does not provide a real-project positive match.
+
+Issue #2 targets 0.3.0 and requires one new rule per minor release. This implementation does not publish or bump the package: release sequencing and dogfooding before the next rule remain release gates.

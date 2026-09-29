@@ -2,6 +2,7 @@
   "categories": { "correctness": "off" },
   "jsPlugins": [{ "name": "bun", "specifier": "eslint-plugin-bunisms" }],
   "rules": {
+    "bun/prefer-import-meta-dir": "warn",
     "bun/prefer-bun-file": "warn",
     "bun/prefer-bun-write": "warn",
     "bun/prefer-bun-spawn": "warn",

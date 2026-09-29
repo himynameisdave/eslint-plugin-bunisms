@@ -8,6 +8,7 @@ import { cases } from '../tests/cases.mjs';
 const directory = await mkdtemp(join(tmpdir(), 'bunisms-oxlint-'));
 try {
   const expected = new Map<string, number>();
+  const fixtureRules = new Map<string, string>();
   const config = join(directory, '.oxlintrc.json');
   const rules = Object.fromEntries(Object.keys(cases).map((name) => [`bun/${name}`, 'error']));
   await writeFile(
@@ -20,12 +21,16 @@ try {
   );
   let index = 0;
   const writes: Promise<void>[] = [];
-  for (const suite of Object.values(cases) as {
-    valid: { code: string; ts?: boolean }[];
-    invalid: { code: string; ts?: boolean; count: number }[];
-  }[]) {
+  for (const [name, suite] of Object.entries(cases) as [
+    string,
+    {
+      valid: { code: string; ts?: boolean }[];
+      invalid: { code: string; ts?: boolean; count: number }[];
+    },
+  ][]) {
     for (const item of [...suite.valid, ...suite.invalid]) {
       const file = join(directory, `case-${index++}.${item.ts ? 'ts' : 'js'}`);
+      fixtureRules.set(file, `bun(${name})`);
       expected.set(file, 'count' in item ? Number(item.count) : 0);
       writes.push(writeFile(file, item.code));
     }
@@ -47,10 +52,13 @@ try {
   for (const diagnostic of diagnostics) {
     assert.match(
       diagnostic.code,
-      /bun\(prefer-(?:bun-(?:file|write|spawn)|import-meta-path)\)/u,
+      /bun\(prefer-(?:bun-(?:file|write|spawn)|import-meta-(?:path|dir))\)/u,
       JSON.stringify(diagnostic),
     );
     const file = resolve(diagnostic.filename);
+    if (diagnostic.code !== fixtureRules.get(file)) {
+      continue;
+    }
     actual.set(file, (actual.get(file) ?? 0) + 1);
   }
   for (const [file, count] of expected) {

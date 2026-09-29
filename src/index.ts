@@ -2,11 +2,13 @@ import packageJson from '../package.json' with { type: 'json' };
 import preferBunFile from './rules/prefer-bun-file.js';
 import preferBunSpawn from './rules/prefer-bun-spawn.js';
 import preferBunWrite from './rules/prefer-bun-write.js';
+import preferImportMetaDir from './rules/prefer-import-meta-dir.js';
 import preferImportMetaPath from './rules/prefer-import-meta-path.js';
 
 import type { ESLint, Linter } from 'eslint';
 
 const rules = {
+  'prefer-import-meta-dir': preferImportMetaDir,
   'prefer-bun-file': preferBunFile,
   'prefer-bun-write': preferBunWrite,
   'prefer-bun-spawn': preferBunSpawn,
