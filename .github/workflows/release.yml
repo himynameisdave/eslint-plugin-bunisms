@@ -59,26 +59,24 @@ jobs:
       - name: Run release gates
         run: bun run check
 
-      - name: Bump version, commit, and create bare version tag
+      - name: Bump package version, commit, and create bare version tag
         run: |
           VERSION="$(npm version "${{ inputs.version }}" --no-git-tag-version)"
           VERSION="${VERSION#v}"
-          node --input-type=module - "$VERSION" <<'NODE'
-            import fs from "node:fs";
-            const path = "src/index.ts";
-            const source = fs.readFileSync(path, "utf8");
-            const updated = source.replace(/(meta: \{ name: 'eslint-plugin-bunisms', version: ')[^']+(' \})/, `$1${process.argv[2]}$2`);
-            if (updated === source) throw new Error("Could not update plugin metadata version in src/index.ts");
-            fs.writeFileSync(path, updated);
-          NODE
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add package.json src/index.ts
+          git add package.json
           git commit -m "Release $VERSION"
           git tag "$VERSION"
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"
 
-      # The prepublishOnly check already ran above and built dist/.
+      # Rebuild after the version bump: src/index.ts reads the version from package.json.
+      - name: Rebuild with release version
+        run: |
+          bun run build
+          node --input-type=module -e 'import plugin from "./dist/index.js"; import pkg from "./package.json" with { type: "json" }; if (plugin.meta.version !== pkg.version) throw new Error(`Built plugin version ${plugin.meta.version} does not match package version ${pkg.version}`)'
+
+      # Release gates ran above; dist/ has now been rebuilt for the bumped version.
       - name: Publish to npm
         id: publish
         run: npm publish --ignore-scripts --access public
