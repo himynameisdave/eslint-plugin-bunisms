@@ -10,9 +10,11 @@ function run(args: string[], cwd = directory): string {
   return result.stdout.toString();
 }
 try {
-  const [pack] = JSON.parse(
+  const packOutput = JSON.parse(
     run(['npm', 'pack', '--ignore-scripts', '--json', '--pack-destination', directory], root),
   );
+  const pack = Array.isArray(packOutput) ? packOutput[0] : Object.values(packOutput)[0];
+  assert.ok(pack, 'npm pack --json returned no package metadata');
   const files = pack.files.map((file: { path: string }) => file.path);
   assert.ok(
     files.includes('dist/index.js') && files.includes('dist/index.d.ts') && files.includes('LICENSE'),

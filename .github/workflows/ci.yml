@@ -21,6 +21,8 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: '1.4.2'
+      - name: Use npm 12 to check pack JSON compatibility
+        run: npm install --global npm@12
       - run: bun install --frozen-lockfile
       - run: bun run check
       - uses: actions/upload-artifact@v7
