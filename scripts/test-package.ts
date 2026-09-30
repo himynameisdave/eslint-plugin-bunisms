@@ -42,7 +42,7 @@ try {
     'node',
     '--input-type=module',
     '-e',
-    "import plugin from 'eslint-plugin-bunisms'; if(Object.keys(plugin.rules).length !== 9) process.exit(1)",
+    "import plugin from 'eslint-plugin-bunisms'; if(Object.keys(plugin.rules).length !== 10) process.exit(1)",
   ]);
   const pkg = JSON.parse(await readFile(join(root, 'package.json'), 'utf8'));
   // Install real consumers only after proving the package works without ESLint.
@@ -86,17 +86,55 @@ try {
     ]);
   }
   assert.equal(eslintOutput.length, 2);
+  await writeFile(
+    join(directory, 'eslint-project/strict.config.mjs'),
+    `import parser from '@typescript-eslint/parser';
+import bun from 'eslint-plugin-bunisms';
+export default [bun.configs.strict, { files: ['**/*.ts'], languageOptions: { parser } }];`,
+  );
+  const strictOutput = JSON.parse(
+    run(
+      [
+        'node',
+        '../node_modules/eslint/bin/eslint.js',
+        '--config',
+        'strict.config.mjs',
+        'example.js',
+        'example.ts',
+        '--format',
+        'json',
+      ],
+      join(directory, 'eslint-project'),
+    ),
+  );
+  assert.equal(strictOutput.length, 2);
+  for (const file of strictOutput) {
+    assert.equal(file.errorCount, 0);
+    const messages = file.messages.filter(
+      (message: { ruleId: string }) => message.ruleId === 'bun/prefer-import-meta-resolve',
+    );
+    assert.equal(messages.length, 1);
+    assert.equal(messages[0].message, 'Consider import.meta.resolve for module resolution in Bun ESM.');
+    assert.equal(messages[0].fix, undefined);
+    assert.equal(messages[0].suggestions, undefined);
+  }
   const oxlintOutput = JSON.parse(
     run(
       ['node', '../node_modules/oxlint/bin/oxlint', '--format', 'json', 'example.js', 'example.ts'],
       join(directory, 'oxlint-project'),
     ),
   );
-  assert.equal(oxlintOutput.diagnostics.length, 21);
+  assert.equal(oxlintOutput.diagnostics.length, 23);
+  assert.equal(
+    oxlintOutput.diagnostics.filter(
+      (diagnostic: { code: string }) => diagnostic.code === 'bun(prefer-import-meta-resolve)',
+    ).length,
+    2,
+  );
   for (const diagnostic of oxlintOutput.diagnostics) {
     assert.match(
       diagnostic.code,
-      /^bun\((?:no-dotenv|prefer-(?:bun-(?:crypto-hasher|file|write|spawn|shell)|import-meta-(?:path|dir|main)))\)$/u,
+      /^bun\((?:no-dotenv|prefer-(?:bun-(?:crypto-hasher|file|write|spawn|shell)|import-meta-(?:path|dir|main|resolve)))\)$/u,
     );
   }
   await writeFile(

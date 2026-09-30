@@ -10,6 +10,7 @@
     "bun/prefer-bun-shell": "warn",
     "bun/prefer-import-meta-path": "warn",
     "bun/prefer-import-meta-main": "warn",
-    "bun/no-dotenv": "warn"
+    "bun/no-dotenv": "warn",
+    "bun/prefer-import-meta-resolve": "warn"
   }
 }

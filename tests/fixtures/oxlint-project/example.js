@@ -15,3 +15,5 @@ spawnSync('echo', ['hello']);
 import { dirname } from 'node:path';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 if (import.meta.path === Bun.main) console.log('entrypoint');
+
+require.resolve('some-package');

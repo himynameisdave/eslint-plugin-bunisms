@@ -54,3 +54,23 @@ it('ships prefer-bun-shell in strict and all but not recommended', async () => {
     }),
   );
 });
+
+it('ships diagnostic-only prefer-import-meta-resolve in strict and all', async () => {
+  await Promise.all(
+    ['recommended', 'strict', 'all'].map(async (preset) => {
+      const eslint = new ESLint({ overrideConfigFile: true, overrideConfig: [plugin.configs[preset]] });
+      const [result] = await eslint.lintText("require.resolve('some-package');");
+      assert.equal(result.messages.length, preset === 'recommended' ? 0 : 1);
+      if (preset !== 'recommended') {
+        const [message] = result.messages;
+        assert.equal(message.ruleId, 'bun/prefer-import-meta-resolve');
+        assert.equal(message.message, 'Consider import.meta.resolve for module resolution in Bun ESM.');
+        assert.equal(message.column, 1);
+        assert.equal(message.endColumn, 16);
+        assert.equal(message.severity, 1);
+        assert.equal(message.fix, undefined);
+        assert.equal(message.suggestions, undefined);
+      }
+    }),
+  );
+});
