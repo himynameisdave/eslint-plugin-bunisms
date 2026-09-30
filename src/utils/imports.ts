@@ -15,6 +15,11 @@ export function variableFor(context: Rule.RuleContext, node: Identifier): Scope.
   }
 }
 
+/** True for an identifier named `name` that no declaration shadows. */
+export function isGlobal(context: Rule.RuleContext, node: Node, name: string): boolean {
+  return node.type === 'Identifier' && node.name === name && !variableFor(context, node)?.defs.length;
+}
+
 export function propertyName(node: Node, computed: boolean): string | undefined {
   if (!computed && node.type === 'Identifier') {
     return node.name;

@@ -8,6 +8,7 @@ import preferBunWrite from './rules/prefer-bun-write.js';
 import preferImportMetaDir from './rules/prefer-import-meta-dir.js';
 import preferImportMetaMain from './rules/prefer-import-meta-main.js';
 import preferImportMetaPath from './rules/prefer-import-meta-path.js';
+import preferImportMetaResolve from './rules/prefer-import-meta-resolve.js';
 
 import type { ESLint, Linter } from 'eslint';
 
@@ -21,7 +22,9 @@ const rules = {
   'prefer-bun-shell': preferBunShell,
   'prefer-import-meta-path': preferImportMetaPath,
   'no-dotenv': noDotenv,
+  'prefer-import-meta-resolve': preferImportMetaResolve,
 };
+const strictOnly = new Set(['prefer-bun-shell', 'prefer-import-meta-resolve']);
 type Preset = 'recommended' | 'strict' | 'all';
 const plugin: ESLint.Plugin & { rules: typeof rules; configs: Record<Preset, Linter.Config> } = {
   meta: { name: 'eslint-plugin-bunisms', version: packageJson.version },
@@ -29,9 +32,7 @@ const plugin: ESLint.Plugin & { rules: typeof rules; configs: Record<Preset, Lin
   configs: {} as Record<Preset, Linter.Config>,
 };
 for (const preset of ['recommended', 'strict', 'all'] as const) {
-  const presetRules = Object.keys(rules).filter(
-    (name) => name !== 'prefer-bun-shell' || preset !== 'recommended',
-  );
+  const presetRules = Object.keys(rules).filter((name) => preset !== 'recommended' || !strictOnly.has(name));
   plugin.configs[preset] = {
     name: `bun/${preset}`,
     plugins: { bun: plugin },

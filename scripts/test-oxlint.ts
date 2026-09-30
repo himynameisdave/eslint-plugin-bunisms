@@ -24,12 +24,16 @@ try {
   for (const [name, suite] of Object.entries(cases) as [
     string,
     {
-      valid: { code: string; ts?: boolean }[];
-      invalid: { code: string; ts?: boolean; count: number }[];
+      valid: { code: string; ts?: boolean; filename?: string; sourceType?: string }[];
+      invalid: { code: string; ts?: boolean; filename?: string; sourceType?: string; count: number }[];
     },
   ][]) {
     for (const item of [...suite.valid, ...suite.invalid]) {
-      const file = join(directory, `case-${index++}.${item.ts ? 'ts' : 'js'}`);
+      // Plain .js/.ts, like real projects; Oxlint only knows CommonJS from the extension.
+      const extension =
+        item.filename?.split('.').at(-1)
+        ?? `${item.sourceType === 'commonjs' ? 'c' : ''}${item.ts ? 'ts' : 'js'}`;
+      const file = join(directory, `case-${index++}.${extension}`);
       fixtureRules.set(file, `bun(${name})`);
       expected.set(file, 'count' in item ? Number(item.count) : 0);
       writes.push(writeFile(file, item.code));
@@ -52,7 +56,7 @@ try {
   for (const diagnostic of diagnostics) {
     assert.match(
       diagnostic.code,
-      /bun\((?:no-dotenv|prefer-(?:bun-(?:crypto-hasher|file|write|spawn|shell)|import-meta-(?:path|dir|main)))\)/u,
+      /bun\((?:no-dotenv|prefer-(?:bun-(?:crypto-hasher|file|write|spawn|shell)|import-meta-(?:path|dir|main|resolve)))\)/u,
       JSON.stringify(diagnostic),
     );
     const file = resolve(diagnostic.filename);

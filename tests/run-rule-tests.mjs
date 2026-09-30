@@ -3,7 +3,7 @@ import parser from '@typescript-eslint/parser';
 import { cases } from './cases.mjs';
 const parse = (item) => ({
   code: item.code,
-  ...(item.ts ? { filename: 'test.ts' } : {}),
+  filename: item.filename ?? (item.ts ? 'test.ts' : 'test.js'),
   languageOptions: {
     ...(item.sourceType ? { sourceType: item.sourceType } : {}),
     ...(item.ts ? { parser } : {}),

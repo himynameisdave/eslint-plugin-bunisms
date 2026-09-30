@@ -445,3 +445,111 @@ cases['prefer-import-meta-main'] = {
   valid: entrypointValid.flatMap((code) => [{ code }, { code, ts: true }]),
   invalid: entrypointInvalid,
 };
+
+const resolveValid = [
+  { code: "export = require.resolve('some-package');", ts: true },
+  "require.resolve('./hash#file.js');",
+  "require.resolve('./percent%file.js');",
+  "require.resolve('./query?file.js');",
+  "require.resolve('#internal');",
+  "import.meta.resolve('some-package');",
+  "function resolveWith(require) { return require.resolve('some-package'); }",
+  "const require = custom; require.resolve('some-package');",
+  "function require() {} require.resolve('some-package');",
+  "{ const require = custom; require.resolve('some-package'); }",
+  "try {} catch (require) { require.resolve('some-package'); }",
+  "import require from 'unrelated'; require.resolve('some-package');",
+  "import * as require from 'unrelated'; require.resolve('some-package');",
+  "import { resolver as require } from 'unrelated'; require.resolve('some-package');",
+  "const resolver = require; resolver.resolve('some-package');",
+  "const { resolve } = require; resolve('some-package');",
+  "require.resolve('some-package', { paths: ['/elsewhere'] });",
+  "require.resolve('some-package', undefined);",
+  'require.resolve(...args);',
+  'require.resolve(name);',
+  'require.resolve(`some-package`);',
+  "require.resolve('');",
+  'require.resolve();',
+  'require.resolve(42);',
+  "require?.resolve('some-package');",
+  "require.resolve?.('some-package');",
+  "require[method]('some-package');",
+  "require.resolve.paths('some-package');",
+  "require.resolve.call(require, 'some-package');",
+  'use(require.resolve);',
+  "other.require.resolve('some-package');",
+  "require = custom; require.resolve('some-package');",
+  "require.resolve('some-package'); require.resolve = custom;",
+  "delete require['resolve']; require.resolve('some-package');",
+  "require.resolve++; require.resolve('some-package');",
+  "({ require } = custom); require.resolve('some-package');",
+  "[require] = custom; require.resolve('some-package');",
+  "for (require of values) {} require.resolve('some-package');",
+  "module.exports = require.resolve('some-package');",
+  "exports.path = require.resolve('some-package');",
+  "require.resolve('some-package'); module['exports'] = {};",
+  "if (require.main === module) require.resolve('some-package');",
+  "if (typeof exports === 'object') {} require.resolve('some-package');",
+  "Object.assign(module, {}); require.resolve('some-package');",
+  { code: "(require as any).resolve = custom; require.resolve('some-package');", ts: true },
+  { code: "require!.resolve = custom; require.resolve('some-package');", ts: true },
+  { code: "(<any>require).resolve = custom; require.resolve('some-package');", ts: true },
+  { code: "(require satisfies object).resolve = custom; require.resolve('some-package');", ts: true },
+  { code: "import fs = require('fs'); require.resolve('some-package');", ts: true },
+  { code: "require.resolve('some-package');", sourceType: 'commonjs' },
+  { code: "require.resolve('some-package');", filename: 'example.cjs' },
+  { code: "require.resolve('some-package');", filename: 'example.cts', ts: true },
+];
+for (const source of ['module', 'node:module']) {
+  resolveValid.push(
+    `import { createRequire } from '${source}'; const require = createRequire(import.meta.url); require.resolve('some-package');`,
+    `import { createRequire as makeRequire } from '${source}'; const req = makeRequire('/elsewhere/file.js'); req.resolve('some-package');`,
+    `import mod from '${source}'; const require = mod.createRequire(import.meta.url); require.resolve('some-package');`,
+    `import * as mod from '${source}'; const require = mod.createRequire(import.meta.url); require.resolve('some-package');`,
+    `const { createRequire } = require('${source}'); const req = createRequire('/elsewhere/file.js'); req.resolve('some-package');`,
+  );
+}
+const resolveInvalid = [
+  "const path = require.resolve('some-package');",
+  "require['resolve']('./file.js');",
+  'require["resolve"]("node:fs");',
+  "require.resolve('fs');",
+  "require.resolve('/absolute/file.js');",
+  "require.resolve('a');\nrequire.resolve('b');",
+  "function find() { return require.resolve('./file.js'); }",
+  "function f(require) { require.resolve('ignored'); }\nrequire.resolve('reported');",
+  "function f(require) { require.resolve = custom; }\nrequire.resolve('reported');",
+  "function f(module, exports) { module.exports = exports.foo; }\nrequire.resolve('reported');",
+  { code: "require.resolve('some-package');", sourceType: 'script' },
+  { code: "import A = B.C; require.resolve('some-package');", ts: true },
+];
+cases['prefer-import-meta-resolve'] = {
+  valid: resolveValid.flatMap((item) => {
+    if (typeof item !== 'string') {
+      return [item];
+    }
+    return [{ code: item }, { code: item, ts: true }];
+  }),
+  invalid: resolveInvalid.flatMap((entry) => {
+    const item = typeof entry === 'string' ? { code: entry } : entry;
+    const { code } = item;
+    // Every require.resolve call with a string literal is reported, except the 'ignored' specifier.
+    const errors = [
+      ...code.matchAll(/require(?:\.resolve|\[['"]resolve['"]\])(?=\(['"](?!ignored)[^'"]+['"]\))/gu),
+    ].map((match) => {
+      const prefix = code.slice(0, match.index);
+      const line = prefix.split('\n').length;
+      const column = match.index - prefix.lastIndexOf('\n');
+      return {
+        message: 'Consider import.meta.resolve for module resolution in Bun ESM.',
+        line,
+        column,
+        endLine: line,
+        endColumn: column + match[0].length,
+        suggestions: [],
+      };
+    });
+    const base = { ...item, count: errors.length, errors };
+    return item.ts ? [base] : [base, { ...base, ts: true }];
+  }),
+};
