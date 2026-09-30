@@ -30,5 +30,9 @@ for (const preset of ['recommended', 'strict', 'all']) {
     assert.equal(metaPathResult.messages.length, 1);
     assert.equal(metaPathResult.messages[0].ruleId, 'bun/prefer-import-meta-path');
     assert.equal(metaPathResult.messages[0].severity, 1);
+    const [dotenvResult] = await eslint.lintText("import 'dotenv/config';");
+    assert.equal(dotenvResult.messages.length, 1);
+    assert.equal(dotenvResult.messages[0].ruleId, 'bun/no-dotenv');
+    assert.equal(dotenvResult.messages[0].severity, 1);
   });
 }
