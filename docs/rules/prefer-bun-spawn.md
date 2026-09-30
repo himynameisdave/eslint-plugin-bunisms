@@ -6,7 +6,7 @@
 
 [`Bun.spawn()` and `Bun.spawnSync()`](https://bun.sh/docs/runtime/child-process) integrate with Bun streams and offer asynchronous and synchronous process execution.
 
-This rule reports [`spawn()` and `spawnSync()`](https://nodejs.org/api/child_process.html) from `child_process`. It does not report `exec`, `execSync` or `fork`; shell migration belongs to a future separate rule.
+This rule reports [`spawn()` and `spawnSync()`](https://nodejs.org/api/child_process.html) from `child_process`. It does not report `exec`, `execSync` or `fork`; [`prefer-bun-shell`](prefer-bun-shell.md) covers `exec` and `execSync`.
 
 Named, aliased, default and namespace imports are supported, with either bare or `node:` module names. CommonJS direct calls and `const` require bindings (including destructuring) are supported. Lexical shadowing and visible binding/module-property mutations suppress reports. Dynamic imports, indirect aliases, mutable CommonJS declarations and interprocedural mutation tracking are not supported. Only actual calls report; unused imports or function references do not.
 
@@ -44,6 +44,6 @@ const child = Bun.spawn(['echo', 'hello']);
 
 ```js
 // ✅
-import { exec } from 'node:child_process';
-exec('echo hello');
+import { fork } from 'node:child_process';
+fork('worker.js');
 ```

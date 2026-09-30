@@ -52,7 +52,7 @@ try {
   for (const diagnostic of diagnostics) {
     assert.match(
       diagnostic.code,
-      /bun\((?:no-dotenv|prefer-(?:bun-(?:file|write|spawn)|import-meta-(?:path|dir|main)))\)/u,
+      /bun\((?:no-dotenv|prefer-(?:bun-(?:file|write|spawn|shell)|import-meta-(?:path|dir|main)))\)/u,
       JSON.stringify(diagnostic),
     );
     const file = resolve(diagnostic.filename);

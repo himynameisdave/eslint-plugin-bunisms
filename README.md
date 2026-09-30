@@ -54,6 +54,7 @@ ESLint needs [`jiti`](https://github.com/unjs/jiti) to load a TypeScript config 
 | [bun/prefer-bun-file](docs/rules/prefer-bun-file.md)                 | `Bun.file()` instead of Node's `readFile()`                                |
 | [bun/prefer-bun-write](docs/rules/prefer-bun-write.md)               | `Bun.write()` instead of Node's `writeFile()`                              |
 | [bun/prefer-bun-spawn](docs/rules/prefer-bun-spawn.md)               | `Bun.spawn()` / `Bun.spawnSync()` instead of Node's subprocess equivalents |
+| [bun/prefer-bun-shell](docs/rules/prefer-bun-shell.md)               | Bun Shell instead of shell-oriented `exec()` calls (strict and all)        |
 | [bun/prefer-import-meta-path](docs/rules/prefer-import-meta-path.md) | `import.meta.path` instead of `fileURLToPath(import.meta.url)`             |
 | [bun/prefer-import-meta-dir](docs/rules/prefer-import-meta-dir.md)   | `import.meta.dir` instead of `dirname(fileURLToPath(import.meta.url))`     |
 | [bun/prefer-import-meta-main](docs/rules/prefer-import-meta-main.md) | `import.meta.main` instead of entrypoint comparisons                       |
@@ -61,7 +62,7 @@ ESLint needs [`jiti`](https://github.com/unjs/jiti) to load a TypeScript config 
 
 Rules recognize imports, aliases and CommonJS bindings, respecting lexical scope. They report calls and entrypoint comparisons without automatically rewriting them. Review runtime compatibility and semantics before migrating.
 
-The `recommended`, `strict` and `all` ESLint presets currently enable all seven rules as warnings. Override individual rules after the preset:
+The `recommended`, `strict` and `all` ESLint presets enable rules as warnings. `prefer-bun-shell` is limited to `strict` and `all` because shell behavior and callback handling need deliberate migration. Override individual rules after the preset:
 
 ```ts
 export default [bun.configs.recommended, { rules: { 'bun/prefer-bun-file': 'error' } }];

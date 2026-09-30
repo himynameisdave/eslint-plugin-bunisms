@@ -38,7 +38,7 @@ try {
     'node',
     '--input-type=module',
     '-e',
-    "import plugin from 'eslint-plugin-bunisms'; if(Object.keys(plugin.rules).length !== 7) process.exit(1)",
+    "import plugin from 'eslint-plugin-bunisms'; if(Object.keys(plugin.rules).length !== 8) process.exit(1)",
   ]);
   const pkg = JSON.parse(await readFile(join(root, 'package.json'), 'utf8'));
   // Install real consumers only after proving the package works without ESLint.
@@ -65,6 +65,7 @@ try {
       join(directory, 'eslint-project'),
     ),
   );
+  // The fixture uses `recommended`, so its exec() calls must not report.
   for (const file of eslintOutput) {
     assert.equal(file.errorCount, 0);
     assert.deepEqual(file.messages.map((message: { ruleId: string }) => message.ruleId).toSorted(), [
@@ -86,11 +87,11 @@ try {
       join(directory, 'oxlint-project'),
     ),
   );
-  assert.equal(oxlintOutput.diagnostics.length, 17);
+  assert.equal(oxlintOutput.diagnostics.length, 19);
   for (const diagnostic of oxlintOutput.diagnostics) {
     assert.match(
       diagnostic.code,
-      /^bun\((?:no-dotenv|prefer-(?:bun-(?:file|write|spawn)|import-meta-(?:path|dir|main)))\)$/u,
+      /^bun\((?:no-dotenv|prefer-(?:bun-(?:file|write|spawn|shell)|import-meta-(?:path|dir|main)))\)$/u,
     );
   }
   await writeFile(
