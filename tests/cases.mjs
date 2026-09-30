@@ -1,5 +1,8 @@
 // Shared by ESLint RuleTester (Bun and Node) and the real Oxlint CLI.
+import { concurrentStateCases } from './concurrent-state-cases.mjs';
+
 export const cases = {};
+cases['no-concurrent-test-shared-state'] = concurrentStateCases;
 const items = (entries) => entries.map((entry) => (typeof entry === 'string' ? { code: entry } : entry));
 const withCount = (entries, pattern) =>
   items(entries).map((item) => Object.assign(item, { count: item.code.match(pattern)?.length ?? 1 }));

@@ -50,28 +50,31 @@ ESLint needs [`jiti`](https://github.com/unjs/jiti) to load a TypeScript config 
 
 ## Rules
 
-| Rule                                                                       | Recommends                                                                   |
-| -------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| [bun/prefer-bun-file](docs/rules/prefer-bun-file.md)                       | `Bun.file()` instead of Node's `readFile()`                                  |
-| [bun/prefer-bun-write](docs/rules/prefer-bun-write.md)                     | `Bun.write()` instead of Node's `writeFile()`                                |
-| [bun/prefer-bun-spawn](docs/rules/prefer-bun-spawn.md)                     | `Bun.spawn()` / `Bun.spawnSync()` instead of Node's subprocess equivalents   |
-| [bun/prefer-fetch](docs/rules/prefer-fetch.md)                             | `fetch()` instead of Node HTTP client `get()` / `request()` (strict and all) |
-| [bun/prefer-bun-crypto-hasher](docs/rules/prefer-bun-crypto-hasher.md)     | `Bun.CryptoHasher` instead of supported `createHash()` chains                |
-| [bun/prefer-bun-shell](docs/rules/prefer-bun-shell.md)                     | Bun Shell instead of shell-oriented `exec()` calls (strict and all)          |
-| [bun/prefer-import-meta-path](docs/rules/prefer-import-meta-path.md)       | `import.meta.path` instead of `fileURLToPath(import.meta.url)`               |
-| [bun/prefer-import-meta-dir](docs/rules/prefer-import-meta-dir.md)         | `import.meta.dir` instead of `dirname(fileURLToPath(import.meta.url))`       |
-| [bun/prefer-import-meta-main](docs/rules/prefer-import-meta-main.md)       | `import.meta.main` instead of entrypoint comparisons                         |
-| [bun/prefer-import-meta-resolve](docs/rules/prefer-import-meta-resolve.md) | Consider ESM module resolution with `import.meta.resolve()` (strict and all) |
-| [bun/no-dotenv](docs/rules/no-dotenv.md)                                   | Avoid redundant standard dotenv initialization when targeting Bun            |
-| [bun/no-late-module-mock](docs/rules/no-late-module-mock.md)               | Warn when a static import can run before `mock.module()` (strict and all)    |
+| Rule                                                                                 | Recommends                                                                       |
+| ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------- |
+| [bun/prefer-bun-file](docs/rules/prefer-bun-file.md)                                 | `Bun.file()` instead of Node's `readFile()`                                      |
+| [bun/prefer-bun-write](docs/rules/prefer-bun-write.md)                               | `Bun.write()` instead of Node's `writeFile()`                                    |
+| [bun/prefer-bun-spawn](docs/rules/prefer-bun-spawn.md)                               | `Bun.spawn()` / `Bun.spawnSync()` instead of Node's subprocess equivalents       |
+| [bun/prefer-fetch](docs/rules/prefer-fetch.md)                                       | `fetch()` instead of Node HTTP client `get()` / `request()` (strict and all)     |
+| [bun/prefer-bun-crypto-hasher](docs/rules/prefer-bun-crypto-hasher.md)               | `Bun.CryptoHasher` instead of supported `createHash()` chains                    |
+| [bun/prefer-bun-shell](docs/rules/prefer-bun-shell.md)                               | Bun Shell instead of shell-oriented `exec()` calls (strict and all)              |
+| [bun/prefer-import-meta-path](docs/rules/prefer-import-meta-path.md)                 | `import.meta.path` instead of `fileURLToPath(import.meta.url)`                   |
+| [bun/prefer-import-meta-dir](docs/rules/prefer-import-meta-dir.md)                   | `import.meta.dir` instead of `dirname(fileURLToPath(import.meta.url))`           |
+| [bun/prefer-import-meta-main](docs/rules/prefer-import-meta-main.md)                 | `import.meta.main` instead of entrypoint comparisons                             |
+| [bun/prefer-import-meta-resolve](docs/rules/prefer-import-meta-resolve.md)           | Consider ESM module resolution with `import.meta.resolve()` (strict and all)     |
+| [bun/no-dotenv](docs/rules/no-dotenv.md)                                             | Avoid redundant standard dotenv initialization when targeting Bun                |
+| [bun/no-late-module-mock](docs/rules/no-late-module-mock.md)                         | Warn when a static import can run before `mock.module()` (strict and all)        |
+| [bun/no-concurrent-test-shared-state](docs/rules/no-concurrent-test-shared-state.md) | Isolate file-level mutable state in concurrent tests (experimental, opt-in only) |
 
-Rules recognize imports, aliases and CommonJS bindings, respecting lexical scope. The exception is `prefer-import-meta-resolve`, which only checks direct global `require.resolve()` calls and skips CommonJS files. They report calls and entrypoint comparisons without automatically rewriting them. Review runtime compatibility and semantics before migrating.
+Rules recognize imports, aliases and CommonJS bindings, respecting lexical scope. The exception is `prefer-import-meta-resolve`, which only checks direct global `require.resolve()` calls and skips CommonJS files. Rules report findings without automatically rewriting code. Review runtime compatibility and semantics before migrating.
 
 The `recommended`, `strict` and `all` ESLint presets enable rules as warnings. `prefer-bun-shell`, `prefer-fetch`, `prefer-import-meta-resolve` and `no-late-module-mock` are limited to `strict` and `all` because shell behavior, HTTP client semantics, callback handling, module resolution semantics and module mock timing need deliberate migration. Override individual rules after the preset:
 
 ```ts
 export default [bun.configs.recommended, { rules: { 'bun/prefer-bun-file': 'error' } }];
 ```
+
+`no-concurrent-test-shared-state` is experimental and excluded from **every preset**, including `all`. Enable it explicitly with `'bun/no-concurrent-test-shared-state': 'warn'` after reviewing its limited analysis and synchronization caveats.
 
 ## Compatibility
 
