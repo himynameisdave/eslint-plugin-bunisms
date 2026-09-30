@@ -4,6 +4,90 @@ const items = (entries) => entries.map((entry) => (typeof entry === 'string' ? {
 const withCount = (entries, pattern) =>
   items(entries).map((item) => Object.assign(item, { count: item.code.match(pattern)?.length ?? 1 }));
 
+cases['no-late-module-mock'] = {
+  valid: [
+    "import './foo'; import { mock } from 'bun:test'; mock.module('./other', () => ({}));",
+    "import './foo.js'; import { mock } from 'bun:test'; mock.module('./foo', () => ({}));",
+    "import './foo'; import { mock } from 'bun:test'; mock.module(source, () => ({}));",
+    "import { mock } from 'bun:test'; mock.module('./foo', () => ({}));",
+    "await import('./foo'); import { mock } from 'bun:test'; mock.module('./foo', () => ({}));",
+    "require('./foo'); const { mock } = require('bun:test'); mock.module('./foo', () => ({}));",
+    "import './foo'; import { mock } from 'unrelated'; mock.module('./foo', () => ({}));",
+    "import './foo'; function mock() {} mock.module('./foo', () => ({}));",
+    "import './foo'; import { mock } from 'bun:test'; function run(mock) { mock.module('./foo', () => ({})); }",
+    "import './foo'; function run(require) { require('bun:test').mock.module('./foo', () => ({})); }",
+    "import './foo'; import { mock } from 'bun:test'; mock.module = custom; mock.module('./foo', () => ({}));",
+    "import './foo'; import bunTest from 'bun:test'; bunTest.mock.module('./foo', () => ({}));",
+    "import * as fs from 'node:fs'; import { mock } from 'bun:test'; mock.module('fs', () => ({}));",
+    "import 'fs'; import { mock } from 'bun:test'; mock.module('node:fs', () => ({}));",
+    {
+      code: "import type { Foo } from './foo'; import { mock } from 'bun:test'; mock.module('./foo', () => ({}));",
+      ts: true,
+    },
+    {
+      code: "import { type Foo } from './foo'; import { mock } from 'bun:test'; mock.module('./foo', () => ({}));",
+      ts: true,
+    },
+    {
+      code: "import { type Foo } from './foo'; import type { mock } from 'bun:test'; mock.module('./foo', () => ({}));",
+      ts: true,
+    },
+  ].map((item) => (typeof item === 'string' ? { code: item } : item)),
+  invalid: [
+    {
+      code: "import { foo } from './foo'; import { mock } from 'bun:test'; mock.module('./foo', () => ({}));",
+      count: 1,
+      errors: [{ messageId: 'lateModuleMock', line: 1, column: 75, endLine: 1, endColumn: 82 }],
+    },
+    {
+      code: "import './foo'; import { mock as replace } from 'bun:test'; replace.module('./foo', () => ({}));",
+      count: 1,
+    },
+    {
+      code: "import './foo'; import * as test from 'bun:test'; test.mock.module('./foo', () => ({}));",
+      count: 1,
+    },
+    {
+      code: "import './foo'; const { mock: replace } = require('bun:test'); replace.module('./foo', () => ({}));",
+      count: 1,
+    },
+    {
+      code: "import './foo'; const bunTest = require('bun:test'); bunTest.mock.module('./foo', () => ({}));",
+      count: 1,
+    },
+    { code: "import './foo'; require('bun:test').mock.module('./foo', () => ({}));", count: 1 },
+    {
+      code: "import './foo'; import { mock } from 'bun:test'; mock['module']('./foo', () => ({}));",
+      count: 1,
+    },
+    {
+      code: "import * as fs from 'node:fs'; import { mock } from 'bun:test'; mock.module('node:fs', () => ({}));",
+      count: 1,
+    },
+    {
+      code: "import * as fs from 'fs'; import { mock } from 'bun:test'; mock.module('fs', () => ({}));",
+      count: 1,
+    },
+    {
+      code: "import './foo'; import { mock } from 'bun:test'; mock.module('./foo', () => ({})); mock.module('./foo', () => ({}));",
+      count: 2,
+      errors: [
+        { messageId: 'lateModuleMock', line: 1, column: 62, endLine: 1, endColumn: 69 },
+        { messageId: 'lateModuleMock', line: 1, column: 96, endLine: 1, endColumn: 103 },
+      ],
+    },
+    { code: "import { mock } from 'bun:test'; mock.module('./foo', () => ({})); import './foo';", count: 1 },
+    {
+      code: "import {} from './foo'; import { mock } from 'bun:test'; mock.module('./foo', () => ({}));",
+      count: 1,
+    },
+    {
+      code: "import { type Foo, foo } from './foo'; import { mock } from 'bun:test'; mock.module('./foo', () => ({}));",
+      count: 1,
+      ts: true,
+    },
+  ],
+};
 cases['no-dotenv'] = {
   valid: [
     "import dotenv from 'dotenv'; dotenv.config({ path: getCustomEnvironmentPath() });",

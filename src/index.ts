@@ -1,5 +1,6 @@
 import packageJson from '../package.json' with { type: 'json' };
 import noDotenv from './rules/no-dotenv.js';
+import noLateModuleMock from './rules/no-late-module-mock.js';
 import preferBunCryptoHasher from './rules/prefer-bun-crypto-hasher.js';
 import preferBunFile from './rules/prefer-bun-file.js';
 import preferBunShell from './rules/prefer-bun-shell.js';
@@ -23,8 +24,9 @@ const rules = {
   'prefer-import-meta-path': preferImportMetaPath,
   'no-dotenv': noDotenv,
   'prefer-import-meta-resolve': preferImportMetaResolve,
+  'no-late-module-mock': noLateModuleMock,
 };
-const strictOnly = new Set(['prefer-bun-shell', 'prefer-import-meta-resolve']);
+const strictOnly = new Set(['prefer-bun-shell', 'prefer-import-meta-resolve', 'no-late-module-mock']);
 type Preset = 'recommended' | 'strict' | 'all';
 const plugin: ESLint.Plugin & { rules: typeof rules; configs: Record<Preset, Linter.Config> } = {
   meta: { name: 'eslint-plugin-bunisms', version: packageJson.version },

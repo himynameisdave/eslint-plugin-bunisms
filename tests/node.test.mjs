@@ -74,3 +74,25 @@ it('ships diagnostic-only prefer-import-meta-resolve in strict and all', async (
     }),
   );
 });
+
+it('ships no-late-module-mock in strict and all but not recommended', async () => {
+  await Promise.all(
+    ['recommended', 'strict', 'all'].map(async (preset) => {
+      const eslint = new ESLint({ overrideConfigFile: true, overrideConfig: [plugin.configs[preset]] });
+      const [result] = await eslint.lintText(
+        "import './foo'; import { mock } from 'bun:test'; mock.module('./foo', () => ({}));",
+      );
+      const messages = result.messages.filter((message) => message.ruleId === 'bun/no-late-module-mock');
+      assert.equal(messages.length, preset === 'recommended' ? 0 : 1);
+      if (messages[0]) {
+        assert.equal(
+          messages[0].message,
+          'This module was statically imported before the mock; its original side effects may already have run.',
+        );
+        assert.equal(messages[0].line, 1);
+        assert.equal(messages[0].column, 62);
+        assert.equal(messages[0].endColumn, 69);
+      }
+    }),
+  );
+});

@@ -42,7 +42,7 @@ try {
     'node',
     '--input-type=module',
     '-e',
-    "import plugin from 'eslint-plugin-bunisms'; if(Object.keys(plugin.rules).length !== 10) process.exit(1)",
+    "import plugin from 'eslint-plugin-bunisms'; if(Object.keys(plugin.rules).length !== 11) process.exit(1)",
   ]);
   const pkg = JSON.parse(await readFile(join(root, 'package.json'), 'utf8'));
   // Install real consumers only after proving the package works without ESLint.
@@ -124,19 +124,41 @@ export default [bun.configs.strict, { files: ['**/*.ts'], languageOptions: { par
       join(directory, 'oxlint-project'),
     ),
   );
-  assert.equal(oxlintOutput.diagnostics.length, 23);
-  assert.equal(
-    oxlintOutput.diagnostics.filter(
-      (diagnostic: { code: string }) => diagnostic.code === 'bun(prefer-import-meta-resolve)',
-    ).length,
-    2,
-  );
+  assert.equal(oxlintOutput.diagnostics.length, 25);
+  for (const code of ['bun(prefer-import-meta-resolve)', 'bun(no-late-module-mock)']) {
+    assert.equal(
+      oxlintOutput.diagnostics.filter((diagnostic: { code: string }) => diagnostic.code === code).length,
+      2,
+    );
+  }
   for (const diagnostic of oxlintOutput.diagnostics) {
     assert.match(
       diagnostic.code,
-      /^bun\((?:no-dotenv|prefer-(?:bun-(?:crypto-hasher|file|write|spawn|shell)|import-meta-(?:path|dir|main|resolve)))\)$/u,
+      /^bun\((?:no-(?:dotenv|late-module-mock)|prefer-(?:bun-(?:crypto-hasher|file|write|spawn|shell)|import-meta-(?:path|dir|main|resolve)))\)$/u,
     );
   }
+  run([
+    'node',
+    '--input-type=module',
+    '-e',
+    `import assert from 'node:assert/strict';
+import { ESLint } from 'eslint';
+import parser from '@typescript-eslint/parser';
+import bun from 'eslint-plugin-bunisms';
+const lint = new ESLint({ overrideConfigFile: true, overrideConfig: [
+  bun.configs.strict,
+  { files: ['**/*.ts'], languageOptions: { parser } },
+] });
+for (const extension of ['js', 'ts']) {
+  const [result] = await lint.lintText(
+    "import './target'; import { mock } from 'bun:test'; mock.module('./target', () => ({}));",
+    { filePath: 'case.' + extension },
+  );
+  assert.deepEqual(result.messages.map(message => message.ruleId), ['bun/no-late-module-mock']);
+  assert.equal(result.messages[0].message,
+    'This module was statically imported before the mock; its original side effects may already have run.');
+}`,
+  ]);
   await writeFile(
     join(directory, 'consumer.mts'),
     `import bun from "eslint-plugin-bunisms";

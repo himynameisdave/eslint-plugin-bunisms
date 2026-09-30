@@ -56,7 +56,7 @@ try {
   for (const diagnostic of diagnostics) {
     assert.match(
       diagnostic.code,
-      /bun\((?:no-dotenv|prefer-(?:bun-(?:crypto-hasher|file|write|spawn|shell)|import-meta-(?:path|dir|main|resolve)))\)/u,
+      /bun\((?:no-(?:dotenv|late-module-mock)|prefer-(?:bun-(?:crypto-hasher|file|write|spawn|shell)|import-meta-(?:path|dir|main|resolve)))\)/u,
       JSON.stringify(diagnostic),
     );
     const file = resolve(diagnostic.filename);
