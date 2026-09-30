@@ -1,3 +1,5 @@
+import 'dotenv/config';
+
 import { spawn, spawnSync } from 'node:child_process';
 import { readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
