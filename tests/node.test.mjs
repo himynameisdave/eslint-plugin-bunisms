@@ -36,24 +36,39 @@ for (const preset of ['recommended', 'strict', 'all']) {
     assert.equal(dotenvResult.messages[0].severity, 1);
   });
 }
-it('ships prefer-bun-shell in strict and all but not recommended', async () => {
-  await Promise.all(
-    ['recommended', 'strict', 'all'].map(async (preset) => {
-      const eslint = new ESLint({ overrideConfigFile: true, overrideConfig: [plugin.configs[preset]] });
-      const [result] = await eslint.lintText(
-        "import { exec } from 'node:child_process'; exec('echo hello');",
-      );
-      const shellMessage = result.messages.find((message) => message.ruleId === 'bun/prefer-bun-shell');
-      assert.equal(Boolean(shellMessage), preset !== 'recommended');
-      if (shellMessage) {
-        assert.equal(shellMessage.message, 'Consider Bun Shell for shell-oriented process execution.');
-        assert.equal(shellMessage.line, 1);
-        assert.equal(shellMessage.column, 44);
-        assert.equal(shellMessage.endColumn, 48);
-      }
-    }),
-  );
-});
+for (const { rule, code, message, column, endColumn } of [
+  {
+    rule: 'prefer-bun-shell',
+    code: "import { exec } from 'node:child_process'; exec('echo hello');",
+    message: 'Consider Bun Shell for shell-oriented process execution.',
+    column: 44,
+    endColumn: 48,
+  },
+  {
+    rule: 'prefer-fetch',
+    code: "import https from 'node:https'; https.get(url);",
+    message: 'Prefer fetch() over Node.js get() when targeting Bun.',
+    column: 33,
+    endColumn: 42,
+  },
+]) {
+  it(`ships ${rule} in strict and all but not recommended`, async () => {
+    await Promise.all(
+      ['recommended', 'strict', 'all'].map(async (preset) => {
+        const eslint = new ESLint({ overrideConfigFile: true, overrideConfig: [plugin.configs[preset]] });
+        const [result] = await eslint.lintText(code);
+        const found = result.messages.find((entry) => entry.ruleId === `bun/${rule}`);
+        assert.equal(Boolean(found), preset !== 'recommended');
+        if (found) {
+          assert.equal(found.message, message);
+          assert.equal(found.line, 1);
+          assert.equal(found.column, column);
+          assert.equal(found.endColumn, endColumn);
+        }
+      }),
+    );
+  });
+}
 
 it('ships diagnostic-only prefer-import-meta-resolve in strict and all', async () => {
   await Promise.all(

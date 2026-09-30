@@ -6,6 +6,7 @@ import preferBunFile from './rules/prefer-bun-file.js';
 import preferBunShell from './rules/prefer-bun-shell.js';
 import preferBunSpawn from './rules/prefer-bun-spawn.js';
 import preferBunWrite from './rules/prefer-bun-write.js';
+import preferFetch from './rules/prefer-fetch.js';
 import preferImportMetaDir from './rules/prefer-import-meta-dir.js';
 import preferImportMetaMain from './rules/prefer-import-meta-main.js';
 import preferImportMetaPath from './rules/prefer-import-meta-path.js';
@@ -19,6 +20,7 @@ const rules = {
   'prefer-bun-file': preferBunFile,
   'prefer-bun-crypto-hasher': preferBunCryptoHasher,
   'prefer-bun-write': preferBunWrite,
+  'prefer-fetch': preferFetch,
   'prefer-bun-spawn': preferBunSpawn,
   'prefer-bun-shell': preferBunShell,
   'prefer-import-meta-path': preferImportMetaPath,
@@ -26,7 +28,12 @@ const rules = {
   'prefer-import-meta-resolve': preferImportMetaResolve,
   'no-late-module-mock': noLateModuleMock,
 };
-const strictOnly = new Set(['prefer-bun-shell', 'prefer-import-meta-resolve', 'no-late-module-mock']);
+const strictOnly = new Set([
+  'prefer-bun-shell',
+  'prefer-fetch',
+  'prefer-import-meta-resolve',
+  'no-late-module-mock',
+]);
 type Preset = 'recommended' | 'strict' | 'all';
 const plugin: ESLint.Plugin & { rules: typeof rules; configs: Record<Preset, Linter.Config> } = {
   meta: { name: 'eslint-plugin-bunisms', version: packageJson.version },

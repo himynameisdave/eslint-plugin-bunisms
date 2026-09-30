@@ -54,6 +54,14 @@ function isModified(variable: Scope.Variable): boolean {
   });
 }
 
+// `default` directly on a module object is the module itself (ESM interop), except `bun:` modules have none.
+function withProperty(reference: BuiltinReference, name: string): BuiltinReference | undefined {
+  if (reference.path.length === 0 && name === 'default') {
+    return reference.module.startsWith('bun:') ? undefined : reference;
+  }
+  return { ...reference, path: [...reference.path, name] };
+}
+
 /** Resolve only direct builtin imports/requires, never names alone or arbitrary aliases. */
 export function resolveBuiltin(
   context: Rule.RuleContext,
@@ -63,7 +71,7 @@ export function resolveBuiltin(
     const property = propertyName(node.property, node.computed);
     const object = resolveBuiltin(context, node.object);
     if (property && object) {
-      return { ...object, path: [...object.path, property] };
+      return withProperty(object, property);
     }
     return;
   }
@@ -95,6 +103,10 @@ export function resolveBuiltin(
   }
   if (definition.type === 'ImportBinding') {
     const declaration = definition.parent;
+    // TS `import x = require()` is also an ImportBinding but has no `source`.
+    if (declaration.type !== 'ImportDeclaration') {
+      return;
+    }
     // Type-only imports cannot identify a runtime API.
     if (isTypeOnly(declaration) || isTypeOnly(definition.node)) {
       return;
@@ -108,15 +120,14 @@ export function resolveBuiltin(
     if (specifier.type === 'ImportDefaultSpecifier' && source.startsWith('bun:')) {
       return;
     }
-    const path =
-      specifier.type === 'ImportSpecifier'
-        ? [
-            specifier.imported.type === 'Identifier'
-              ? specifier.imported.name
-              : String(specifier.imported.value),
-          ]
-        : [];
-    return { module: source.replace(/^node:/u, ''), path };
+    const reference = { module: source.replace(/^node:/u, ''), path: [] };
+    if (specifier.type !== 'ImportSpecifier') {
+      return reference;
+    }
+    return withProperty(
+      reference,
+      specifier.imported.type === 'Identifier' ? specifier.imported.name : String(specifier.imported.value),
+    );
   }
   if (definition.type !== 'Variable' || definition.parent.kind !== 'const') {
     return;
@@ -143,7 +154,7 @@ export function resolveBuiltin(
     }
     const name = propertyName(property.key, property.computed);
     if (name) {
-      return { ...origin, path: [...origin.path, name] };
+      return withProperty(origin, name);
     }
   }
 }
