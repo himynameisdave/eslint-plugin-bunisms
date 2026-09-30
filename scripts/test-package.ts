@@ -65,12 +65,12 @@ try {
       join(directory, 'eslint-project'),
     ),
   );
+  // The fixture uses `recommended`, so its exec() calls must not report.
   for (const file of eslintOutput) {
     assert.equal(file.errorCount, 0);
     assert.deepEqual(file.messages.map((message: { ruleId: string }) => message.ruleId).toSorted(), [
       'bun/no-dotenv',
       'bun/prefer-bun-file',
-      'bun/prefer-bun-shell',
       'bun/prefer-bun-spawn',
       'bun/prefer-bun-spawn',
       'bun/prefer-bun-write',

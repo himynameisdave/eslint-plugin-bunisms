@@ -27,7 +27,6 @@ export default defineConfig({
     'bun/prefer-bun-file': 'warn',
     'bun/prefer-bun-write': 'warn',
     'bun/prefer-bun-spawn': 'warn',
-    'bun/prefer-bun-shell': 'warn',
     'bun/prefer-import-meta-path': 'warn',
     'bun/prefer-import-meta-dir': 'warn',
     'bun/prefer-import-meta-main': 'warn',

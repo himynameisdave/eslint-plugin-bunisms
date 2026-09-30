@@ -165,6 +165,11 @@ shell.invalid.push(
     ts: true,
     errors: [{ messageId: 'preferBunShell', line: 1, column: 77, endLine: 1, endColumn: 80 }],
   },
+  {
+    code: "import { execSync } from 'node:child_process'; execSync('a');",
+    count: 1,
+    errors: [{ message: 'Consider Bun Shell or Bun.spawnSync() for shell-oriented process execution.' }],
+  },
 );
 shell.valid.push(
   "import { spawn } from 'node:child_process'; spawn('echo', ['hello']);",
