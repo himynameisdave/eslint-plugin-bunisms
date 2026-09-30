@@ -9,6 +9,16 @@ const directory = await mkdtemp(join(tmpdir(), 'bunisms-oxlint-'));
 try {
   const expected = new Map<string, number>();
   const fixtureRules = new Map<string, string>();
+  type Diagnostic = { message: string; line: number; column: number; endColumn: number };
+  const exactDiagnostics = new Map<string, Diagnostic[]>();
+  type Fixture = {
+    code: string;
+    ts?: boolean;
+    filename?: string;
+    sourceType?: string;
+    count?: number;
+    errors?: Diagnostic[];
+  };
   const config = join(directory, '.oxlintrc.json');
   const rules = Object.fromEntries(Object.keys(cases).map((name) => [`bun/${name}`, 'error']));
   await writeFile(
@@ -24,8 +34,8 @@ try {
   for (const [name, suite] of Object.entries(cases) as [
     string,
     {
-      valid: { code: string; ts?: boolean; filename?: string; sourceType?: string }[];
-      invalid: { code: string; ts?: boolean; filename?: string; sourceType?: string; count: number }[];
+      valid: Fixture[];
+      invalid: Fixture[];
     },
   ][]) {
     for (const item of [...suite.valid, ...suite.invalid]) {
@@ -36,6 +46,9 @@ try {
       const file = join(directory, `case-${index++}.${extension}`);
       fixtureRules.set(file, `bun(${name})`);
       expected.set(file, 'count' in item ? Number(item.count) : 0);
+      if (name === 'no-concurrent-test-shared-state' && 'errors' in item && item.errors) {
+        exactDiagnostics.set(file, item.errors);
+      }
       writes.push(writeFile(file, item.code));
     }
   }
@@ -64,6 +77,28 @@ try {
   }
   for (const [file, count] of expected) {
     assert.equal(actual.get(file) ?? 0, count, file);
+  }
+  for (const [file, errors] of exactDiagnostics) {
+    const matching = diagnostics.filter(
+      (diagnostic: { filename: string; code: string }) =>
+        resolve(diagnostic.filename) === file && diagnostic.code === fixtureRules.get(file),
+    );
+    const locations = matching.map(
+      (diagnostic: {
+        message: string;
+        labels: { span: { line: number; column: number; length: number } }[];
+      }) => {
+        const [label] = diagnostic.labels;
+        assert.ok(label);
+        const { line, column, length } = label.span;
+        return { message: diagnostic.message, line, column, endColumn: column + length };
+      },
+    );
+    assert.deepEqual(
+      locations.toSorted((a: Diagnostic, b: Diagnostic) => a.line - b.line || a.column - b.column),
+      errors.map(({ message, line, column, endColumn }) => ({ message, line, column, endColumn })),
+      file,
+    );
   }
   assert.equal(
     [...actual.values()].reduce((a, b) => a + b, 0),

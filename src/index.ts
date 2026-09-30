@@ -1,4 +1,5 @@
 import packageJson from '../package.json' with { type: 'json' };
+import noConcurrentTestSharedState from './rules/no-concurrent-test-shared-state.js';
 import noDotenv from './rules/no-dotenv.js';
 import noLateModuleMock from './rules/no-late-module-mock.js';
 import preferBunCryptoHasher from './rules/prefer-bun-crypto-hasher.js';
@@ -27,7 +28,9 @@ const rules = {
   'no-dotenv': noDotenv,
   'prefer-import-meta-resolve': preferImportMetaResolve,
   'no-late-module-mock': noLateModuleMock,
+  'no-concurrent-test-shared-state': noConcurrentTestSharedState,
 };
+const optInOnly = new Set(['no-concurrent-test-shared-state']);
 const strictOnly = new Set([
   'prefer-bun-shell',
   'prefer-fetch',
@@ -41,7 +44,9 @@ const plugin: ESLint.Plugin & { rules: typeof rules; configs: Record<Preset, Lin
   configs: {} as Record<Preset, Linter.Config>,
 };
 for (const preset of ['recommended', 'strict', 'all'] as const) {
-  const presetRules = Object.keys(rules).filter((name) => preset !== 'recommended' || !strictOnly.has(name));
+  const presetRules = Object.keys(rules).filter(
+    (name) => !optInOnly.has(name) && (preset !== 'recommended' || !strictOnly.has(name)),
+  );
   plugin.configs[preset] = {
     name: `bun/${preset}`,
     plugins: { bun: plugin },

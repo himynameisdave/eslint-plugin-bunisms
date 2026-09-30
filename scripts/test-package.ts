@@ -42,7 +42,7 @@ try {
     'node',
     '--input-type=module',
     '-e',
-    "import plugin from 'eslint-plugin-bunisms'; if(Object.keys(plugin.rules).length !== 12 || plugin.configs.strict.rules['bun/prefer-fetch'] !== 'warn' || plugin.configs.recommended.rules['bun/prefer-fetch'] !== undefined) process.exit(1)",
+    "import plugin from 'eslint-plugin-bunisms'; if(Object.keys(plugin.rules).length !== 13 || plugin.configs.strict.rules['bun/prefer-fetch'] !== 'warn' || plugin.configs.recommended.rules['bun/prefer-fetch'] !== undefined) process.exit(1)",
   ]);
   const pkg = JSON.parse(await readFile(join(root, 'package.json'), 'utf8'));
   // Install real consumers only after proving the package works without ESLint.
@@ -124,8 +124,12 @@ export default [bun.configs.strict, { files: ['**/*.ts'], languageOptions: { par
       join(directory, 'oxlint-project'),
     ),
   );
-  assert.equal(oxlintOutput.diagnostics.length, 25);
-  for (const code of ['bun(prefer-import-meta-resolve)', 'bun(no-late-module-mock)']) {
+  assert.equal(oxlintOutput.diagnostics.length, 27);
+  for (const code of [
+    'bun(prefer-import-meta-resolve)',
+    'bun(no-late-module-mock)',
+    'bun(no-concurrent-test-shared-state)',
+  ]) {
     assert.equal(
       oxlintOutput.diagnostics.filter((diagnostic: { code: string }) => diagnostic.code === code).length,
       2,
@@ -134,7 +138,7 @@ export default [bun.configs.strict, { files: ['**/*.ts'], languageOptions: { par
   for (const diagnostic of oxlintOutput.diagnostics) {
     assert.match(
       diagnostic.code,
-      /^bun\((?:no-(?:dotenv|late-module-mock)|prefer-(?:bun-(?:crypto-hasher|file|write|spawn|shell)|import-meta-(?:path|dir|main|resolve)))\)$/u,
+      /^bun\((?:no-(?:dotenv|late-module-mock|concurrent-test-shared-state)|prefer-(?:bun-(?:crypto-hasher|file|write|spawn|shell)|import-meta-(?:path|dir|main|resolve)))\)$/u,
     );
   }
   run([
@@ -155,6 +159,21 @@ for (const extension of ['js', 'ts']) {
     { filePath: 'case.' + extension },
   );
   assert.deepEqual(result.messages.map(message => message.ruleId), ['bun/no-late-module-mock']);
+}
+const concurrentCode = "import { test } from 'bun:test'; let counter = 0; test.concurrent('one', () => { counter++; });";
+for (const preset of ['recommended', 'strict', 'all']) {
+  assert.equal(bun.configs[preset].rules['bun/no-concurrent-test-shared-state'], undefined);
+}
+const optIn = new ESLint({ overrideConfigFile: true, overrideConfig: [
+  bun.configs.all,
+  { rules: { 'bun/no-concurrent-test-shared-state': 'warn' } },
+  { files: ['**/*.ts'], languageOptions: { parser } },
+] });
+for (const extension of ['js', 'ts']) {
+  const [result] = await optIn.lintText(concurrentCode, { filePath: 'concurrent.' + extension });
+  assert.deepEqual(result.messages.map(message => message.ruleId), ['bun/no-concurrent-test-shared-state']);
+  assert.equal(result.messages[0].fix, undefined);
+  assert.equal(result.messages[0].suggestions, undefined);
 }`,
   ]);
   await writeFile(

@@ -102,3 +102,30 @@ it('ships no-late-module-mock in strict and all but not recommended', async () =
     }),
   );
 });
+
+it('keeps experimental shared-state diagnostics opt-in in every preset', async () => {
+  const code =
+    "import { test } from 'bun:test'; let counter = 0; test.concurrent('one', () => { counter++; });";
+  await Promise.all(
+    ['recommended', 'strict', 'all'].map(async (preset) => {
+      assert.equal(plugin.configs[preset].rules['bun/no-concurrent-test-shared-state'], undefined);
+      const eslint = new ESLint({ overrideConfigFile: true, overrideConfig: [plugin.configs[preset]] });
+      const [result] = await eslint.lintText(code);
+      assert.deepEqual(result.messages, []);
+    }),
+  );
+  const eslint = new ESLint({
+    overrideConfigFile: true,
+    overrideConfig: [plugin.configs.all, { rules: { 'bun/no-concurrent-test-shared-state': 'warn' } }],
+  });
+  const [result] = await eslint.lintText(code);
+  assert.equal(result.messages.length, 1);
+  const [message] = result.messages;
+  assert.equal(message.ruleId, 'bun/no-concurrent-test-shared-state');
+  assert.equal(message.message, 'Concurrent tests mutate shared state; isolate state within each test.');
+  assert.equal(message.line, 1);
+  assert.equal(message.column, code.lastIndexOf('counter') + 1);
+  assert.equal(message.endColumn, code.lastIndexOf('counter') + 8);
+  assert.equal(message.fix, undefined);
+  assert.equal(message.suggestions, undefined);
+});
