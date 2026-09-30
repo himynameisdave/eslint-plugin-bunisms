@@ -53,12 +53,9 @@ try {
   assert.equal(result.exitCode, 1, result.stderr.toString() + output);
   const { diagnostics } = JSON.parse(output);
   const actual = new Map<string, number>();
+  const known = new Set(Object.keys(cases).map((name) => `bun(${name})`));
   for (const diagnostic of diagnostics) {
-    assert.match(
-      diagnostic.code,
-      /bun\((?:no-(?:dotenv|late-module-mock)|prefer-(?:bun-(?:crypto-hasher|file|write|spawn|shell)|import-meta-(?:path|dir|main|resolve)))\)/u,
-      JSON.stringify(diagnostic),
-    );
+    assert.ok(known.has(diagnostic.code), JSON.stringify(diagnostic));
     const file = resolve(diagnostic.filename);
     if (diagnostic.code !== fixtureRules.get(file)) {
       continue;

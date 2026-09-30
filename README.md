@@ -55,6 +55,7 @@ ESLint needs [`jiti`](https://github.com/unjs/jiti) to load a TypeScript config 
 | [bun/prefer-bun-file](docs/rules/prefer-bun-file.md)                       | `Bun.file()` instead of Node's `readFile()`                                  |
 | [bun/prefer-bun-write](docs/rules/prefer-bun-write.md)                     | `Bun.write()` instead of Node's `writeFile()`                                |
 | [bun/prefer-bun-spawn](docs/rules/prefer-bun-spawn.md)                     | `Bun.spawn()` / `Bun.spawnSync()` instead of Node's subprocess equivalents   |
+| [bun/prefer-fetch](docs/rules/prefer-fetch.md)                             | `fetch()` instead of Node HTTP client `get()` / `request()` (strict and all) |
 | [bun/prefer-bun-crypto-hasher](docs/rules/prefer-bun-crypto-hasher.md)     | `Bun.CryptoHasher` instead of supported `createHash()` chains                |
 | [bun/prefer-bun-shell](docs/rules/prefer-bun-shell.md)                     | Bun Shell instead of shell-oriented `exec()` calls (strict and all)          |
 | [bun/prefer-import-meta-path](docs/rules/prefer-import-meta-path.md)       | `import.meta.path` instead of `fileURLToPath(import.meta.url)`               |
@@ -66,7 +67,7 @@ ESLint needs [`jiti`](https://github.com/unjs/jiti) to load a TypeScript config 
 
 Rules recognize imports, aliases and CommonJS bindings, respecting lexical scope. The exception is `prefer-import-meta-resolve`, which only checks direct global `require.resolve()` calls and skips CommonJS files. They report calls and entrypoint comparisons without automatically rewriting them. Review runtime compatibility and semantics before migrating.
 
-The `recommended`, `strict` and `all` ESLint presets enable rules as warnings. `prefer-bun-shell`, `prefer-import-meta-resolve` and `no-late-module-mock` are limited to `strict` and `all` because shell behavior, callback handling, module resolution semantics and module mock timing need deliberate migration. Override individual rules after the preset:
+The `recommended`, `strict` and `all` ESLint presets enable rules as warnings. `prefer-bun-shell`, `prefer-fetch`, `prefer-import-meta-resolve` and `no-late-module-mock` are limited to `strict` and `all` because shell behavior, HTTP client semantics, callback handling, module resolution semantics and module mock timing need deliberate migration. Override individual rules after the preset:
 
 ```ts
 export default [bun.configs.recommended, { rules: { 'bun/prefer-bun-file': 'error' } }];

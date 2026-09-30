@@ -7,6 +7,7 @@ const withCount = (entries, pattern) =>
 cases['no-late-module-mock'] = {
   valid: [
     "import './foo'; import { mock } from 'bun:test'; mock.module('./other', () => ({}));",
+    "import './foo'; import * as test from 'bun:test'; test.default.mock.module('./foo', () => ({}));",
     "import './foo.js'; import { mock } from 'bun:test'; mock.module('./foo', () => ({}));",
     "import './foo'; import { mock } from 'bun:test'; mock.module(source, () => ({}));",
     "import { mock } from 'bun:test'; mock.module('./foo', () => ({}));",
@@ -168,6 +169,47 @@ cases['no-dotenv'] = {
     { code: "import dotenv from 'dotenv'; dotenv.config({ quiet: true });", count: 1 },
     { code: "require('dotenv').config({ 'debug': false, quiet: true });", count: 1 },
     { code: "import dotenv from 'dotenv'; dotenv.config({});", count: 1 },
+  ],
+};
+cases['prefer-fetch'] = {
+  valid: items([
+    "import http from 'node:http'; http.createServer(handler);",
+    "import https from 'node:https'; https.createServer(handler);",
+    "import { get } from 'unrelated'; get(url);",
+    'function get() {} get(url);',
+    "import * as https from 'node:https'; function f(https) { https.get(url, callback); }",
+    "import https from 'node:https'; https.get = custom; https.get(url);",
+    { code: "import type { get } from 'node:https'; get(url);", ts: true },
+    "function f(require) { const https = require('node:https'); https.get(url); }",
+    { code: "import http = require('node:http'); http.get(url);", ts: true },
+  ]),
+  invalid: [
+    {
+      code: "import https from 'node:https'; https.get(url, callback);",
+      count: 1,
+      errors: [
+        {
+          messageId: 'preferBun',
+          line: 1,
+          column: 33,
+          endLine: 1,
+          endColumn: 42,
+        },
+      ],
+    },
+    { code: "import { request as send } from 'http'; send(url, options);", count: 1 },
+    { code: "import * as http from 'node:http'; http['get'](url);", count: 1 },
+    { code: "import http from 'http'; http.request(url, options);", count: 1 },
+    { code: "const { get: fetchUrl } = require('https'); fetchUrl(url);", count: 1 },
+    { code: "require('node:http').get(url, callback);", count: 1 },
+    { code: "import { get } from 'node:https'; get(a); get(b);", count: 2 },
+    { code: "import { get } from 'node:https'; get(url);", ts: true, count: 1 },
+    { code: "import { get } from 'node:http'; get(url);", count: 1 },
+    { code: "import https from 'https'; https.request(options, callback);", count: 1 },
+    { code: "const { request } = require('node:https'); request(url);", sourceType: 'commonjs', count: 1 },
+    { code: "const https = require('node:https'); https.get(url);", sourceType: 'commonjs', count: 1 },
+    { code: "import { default as https } from 'node:https'; https.get(url);", count: 1 },
+    { code: "import * as https from 'node:https'; https.default.request(url);", count: 1 },
   ],
 };
 cases['prefer-bun-crypto-hasher'] = {

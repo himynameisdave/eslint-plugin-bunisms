@@ -12,7 +12,7 @@ export function createRule(
     meta: {
       type: 'suggestion',
       docs: {
-        description: `Prefer ${Object.values(methods).join(' or ')} over the corresponding Node.js APIs.`,
+        description: `Prefer ${[...new Set(Object.values(methods))].join(' or ')} over the corresponding Node.js APIs.`,
         url: `https://github.com/himynameisdave/eslint-plugin-bunisms/blob/main/docs/rules/${name}.md`,
       },
       schema: [],
