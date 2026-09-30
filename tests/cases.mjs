@@ -717,3 +717,49 @@ cases['prefer-import-meta-resolve'] = {
     return item.ts ? [base] : [base, { ...base, ts: true }];
   }),
 };
+cases['prefer-mock-restore-in-after-each'] = {
+  valid: items([
+    "import { afterEach, mock, spyOn } from 'bun:test'; afterEach(() => mock.restore()); spyOn(object, 'method');",
+    "import * as bunTest from 'bun:test'; bunTest.afterEach(() => bunTest.mock.restore()); bunTest.spyOn(object, 'method');",
+    "import { afterEach as cleanup, mock as mocks, spyOn as watch } from 'bun:test'; cleanup(() => mocks.restore()); watch(object, 'method');",
+    "import { afterEach, mock, spyOn, describe } from 'bun:test'; describe('group', () => { afterEach(() => mock.restore()); spyOn(object, 'method'); });",
+    "import { spyOn } from 'other'; spyOn(object, 'method');",
+    "function spyOn() {} spyOn(object, 'method');",
+    "import { spyOn } from 'bun:test'; function f(spyOn) { spyOn(object, 'method'); }",
+    "function f(require) { const { spyOn } = require('bun:test'); spyOn(object, 'method'); }",
+    "const { spyOn } = require('unrelated'); spyOn(object, 'method');",
+  ]),
+  invalid: [
+    { code: "import { spyOn } from 'bun:test'; spyOn(object, 'method');", count: 1 },
+    { code: "import * as bunTest from 'bun:test'; bunTest.spyOn(object, 'method');", count: 1 },
+    { code: "const { spyOn: watch } = require('bun:test'); watch(object, 'method');", count: 1 },
+    { code: "import { spyOn } from 'bun:test'; spyOn(a, 'x'); spyOn(b, 'y');", count: 2 },
+    { code: "import { spyOn } from 'bun:test'; function f() { spyOn(object, 'method'); }", count: 1 },
+    {
+      code: "import { spyOn } from 'bun:test'; function f(spyOn) { spyOn(object, 'method'); } spyOn(a, 'x');",
+      count: 1,
+    },
+    {
+      code: "import { afterEach, mock, spyOn, describe } from 'bun:test'; describe('group', () => { afterEach(() => mock.restore()); }); describe('other', () => spyOn(object, 'method'));",
+      count: 1,
+    },
+    {
+      code: "import { spyOn } from 'bun:test'; afterEach(() => mock.restore()); spyOn(object, 'method');",
+      count: 1,
+    },
+    {
+      code: "import { spyOn } from 'bun:test'; function f(afterEach) { afterEach(() => mock.restore()); } spyOn(object, 'method');",
+      count: 1,
+    },
+    {
+      code: "import { mock, spyOn } from 'bun:test'; mock.restore(); spyOn(object, 'method');",
+      count: 1,
+    },
+    { code: "import { spyOn } from 'bun:test'; spyOn(object, 'method');", ts: true, count: 1 },
+    {
+      code: "const { spyOn } = require('bun:test'); spyOn(object, 'method');",
+      sourceType: 'commonjs',
+      count: 1,
+    },
+  ],
+};

@@ -34,6 +34,11 @@ for (const preset of ['recommended', 'strict', 'all']) {
     assert.equal(dotenvResult.messages.length, 1);
     assert.equal(dotenvResult.messages[0].ruleId, 'bun/no-dotenv');
     assert.equal(dotenvResult.messages[0].severity, 1);
+    const [mockResult] = await eslint.lintText("import { spyOn } from 'bun:test'; spyOn(object, 'method');");
+    const mockMessage = mockResult.messages.find(
+      (message) => message.ruleId === 'bun/prefer-mock-restore-in-after-each',
+    );
+    assert.equal(Boolean(mockMessage), preset !== 'recommended');
   });
 }
 for (const { rule, code, message, column, endColumn } of [
