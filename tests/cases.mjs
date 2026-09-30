@@ -32,6 +32,24 @@ cases['no-late-module-mock'] = {
       code: "import { type Foo } from './foo'; import type { mock } from 'bun:test'; mock.module('./foo', () => ({}));",
       ts: true,
     },
+    {
+      code: "import { foo } from './foo'; import { mock } from 'bun:test'; mock.module('./foo', () => ({}));",
+      ts: true,
+    },
+    {
+      code: "import { Foo } from './foo'; let value: Foo; import { mock } from 'bun:test'; mock.module('./foo', () => ({}));",
+      ts: true,
+    },
+    {
+      code: "export type * from './foo'; import { mock } from 'bun:test'; mock.module('./foo', () => ({}));",
+      ts: true,
+    },
+    {
+      code: "export { type Foo } from './foo'; import { mock } from 'bun:test'; mock.module('./foo', () => ({}));",
+      ts: true,
+    },
+    `import './foo'; import { mock } from 'bun:test'; mock.module(\`./\${name}\`, () => ({}));`,
+    "import './foo'; import { vi } from 'unrelated'; vi.mock('./foo', () => ({}));",
   ].map((item) => (typeof item === 'string' ? { code: item } : item)),
   invalid: [
     {
@@ -82,10 +100,30 @@ cases['no-late-module-mock'] = {
       count: 1,
     },
     {
-      code: "import { type Foo, foo } from './foo'; import { mock } from 'bun:test'; mock.module('./foo', () => ({}));",
+      code: "import { type Foo, foo } from './foo'; foo(); import { mock } from 'bun:test'; mock.module('./foo', () => ({}));",
       count: 1,
       ts: true,
     },
+    {
+      code: "import {} from './foo'; import { mock } from 'bun:test'; mock.module('./foo', () => ({}));",
+      count: 1,
+      ts: true,
+    },
+    {
+      code: "import foo = require('./foo'); import { mock } from 'bun:test'; mock.module('./foo', () => ({}));",
+      count: 1,
+      ts: true,
+    },
+    {
+      code: "export * from './foo'; import { mock } from 'bun:test'; mock.module('./foo', () => ({}));",
+      count: 1,
+    },
+    {
+      code: "export { foo } from './foo'; import { mock } from 'bun:test'; mock.module('./foo', () => ({}));",
+      count: 1,
+    },
+    { code: "import './foo'; import { vi } from 'bun:test'; vi.mock('./foo', () => ({}));", count: 1 },
+    { code: "import './foo'; import { mock } from 'bun:test'; mock.module(`./foo`, () => ({}));", count: 1 },
   ],
 };
 cases['no-dotenv'] = {

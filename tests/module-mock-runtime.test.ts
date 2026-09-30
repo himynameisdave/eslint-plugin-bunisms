@@ -1,14 +1,8 @@
-import { expect, mock, test } from 'bun:test';
+import { expect, test } from 'bun:test';
 
-import { value } from './fixtures/module-mock-target.js';
-
+// Module mocks cannot be undone, so run the late mock in its own process.
 test('a late mock updates live bindings but cannot undo original side effects', () => {
-  const effects = globalThis as typeof globalThis & { bunismsModuleMockEffects?: number };
-  expect(effects.bunismsModuleMockEffects).toBe(1);
-  expect(value).toBe('original');
-
-  mock.module('./fixtures/module-mock-target.js', () => ({ value: 'mocked' }));
-
-  expect(value).toBe('mocked');
-  expect(effects.bunismsModuleMockEffects).toBe(1);
+  const result = Bun.spawnSync([process.execPath, 'test', `${import.meta.dir}/fixtures/late-module-mock.ts`]);
+  expect(result.stderr.toString()).toContain(' 1 pass');
+  expect(result.exitCode).toBe(0);
 });

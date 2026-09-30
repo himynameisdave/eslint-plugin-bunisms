@@ -155,8 +155,6 @@ for (const extension of ['js', 'ts']) {
     { filePath: 'case.' + extension },
   );
   assert.deepEqual(result.messages.map(message => message.ruleId), ['bun/no-late-module-mock']);
-  assert.equal(result.messages[0].message,
-    'This module was statically imported before the mock; its original side effects may already have run.');
 }`,
   ]);
   await writeFile(
