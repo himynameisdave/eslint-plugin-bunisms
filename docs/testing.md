@@ -106,3 +106,47 @@ Runtime comparisons ran on Bun 1.4.2; minimum-version runtime execution on Bun
 1.4.0 is not recorded here. This implementation does not publish or bump the
 package version; the rule remains planned for its own 0.6.0 release after the
 release sequence and dogfooding described in `VERSIONING.md`.
+
+## no-concurrent-test-shared-state validation
+
+September 30, 2026, [issue #12](https://github.com/himynameisdave/eslint-plugin-bunisms/issues/12).
+
+- Official [Bun concurrency documentation](https://bun.com/docs/test#concurrent-test-execution)
+  and the [1.4.0 documentation](https://github.com/oven-sh/bun/blob/bun-v1.4.0/docs/test/index.mdx#concurrent-test-execution)
+  establish that explicit concurrent tests overlap within a file and that
+  `test.serial` supports tests requiring sequential state. The
+  [parallelism guide](https://bun.com/docs/test/parallel#concurrent-tests-within-a-file)
+  distinguishes cooperative concurrency from separate worker processes.
+- `tests/concurrent-state-runtime.test.ts` passes on Bun 1.4.0 and 1.4.2.
+  Its subprocess fixture deterministically demonstrates two tests reading the
+  same value before either writes (a lost update), callback-local isolation,
+  the `it` alias, namespace and CommonJS access, `.each`, `.failing`, both
+  orders of `.only`/`.concurrent`, and the skipped/todo boundaries. Promise
+  barriers control the interleaving without timing assertions.
+- The initial rule reports only direct writes to file-level variable bindings
+  in inline, explicitly concurrent test callbacks. It does not track object
+  identity, mutating methods, helpers, nested functions/classes, suite-local
+  state, indirect callbacks, inherited concurrency or conditional qualifiers.
+  Nested synchronization callbacks and atomic methods are excluded; arbitrary
+  locks acquired in the test body cannot be verified. A finding identifies
+  shared state, not proof of a race. There are no options, fixes or suggestions.
+- 164 new JS/TS fixtures (941 shared fixtures total) exercise binding identity,
+  aliases, CommonJS, shadowing, local state, multiple diagnostics, assignments,
+  destructuring and loop writes. ESLint 9.39.5 and 10.11.0 run the built plugin
+  under Node 22; Oxlint 1.85.0 runs the same fixtures with exact message and
+  location assertions for the new rule. `bun run check` and clean tarball
+  consumers with both ESLint majors and Oxlint pass. Preset integration tests
+  assert exclusion from `recommended`, `strict` and `all` and explicit opt-in.
+- Read-only scans of 468 JS/TS files found no diagnostics or parse failures:
+  [Bun's test-runner suite at `2722608`](https://github.com/oven-sh/bun/tree/2722608f474a2d9468e9d1ac3a1eb2fe6e630901/test/js/bun/test)
+  (230 files) and [Elysia at `e037eca`](https://github.com/elysiajs/elysia/tree/e037eca710e7ad193be09cc6615ab0dbe54af914)
+  (238 files). Reviewed Bun's `concurrent.fixture.ts`, `concurrent-max.fixture.ts`,
+  `concurrent-and-serial.fixture.ts`, `test-on-test-finished.test.ts` and
+  `mock/mock-module.test.ts`: their helpers, hook mutations and callback-local
+  state correctly stay outside the report boundary. This sample contains no
+  positive findings, so it establishes only initial false-positive evidence.
+
+The rule stays experimental and outside every preset pending extensive dogfood.
+This PR adds only this rule and leaves the package version unchanged. The
+issue's planned 0.13.0 release, release sequencing and further dogfood remain
+release gates; this implementation does not publish a release.
