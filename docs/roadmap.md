@@ -27,3 +27,5 @@ One rule per minor release after 0.1.0 testing. Third-party migrations and the d
 | [bun/prefer-bun-redis](https://github.com/himynameisdave/eslint-plugin-bunisms/issues/21)                                 | post-1.0  |
 | [bun/prefer-bun-websocket-server](https://github.com/himynameisdave/eslint-plugin-bunisms/issues/22)                      | post-1.0  |
 | [Support dynamic builtin imports in the initial rules](https://github.com/himynameisdave/eslint-plugin-bunisms/issues/23) | v1.0      |
+
+The `await-async-module-mock` rule is [deferred pending Bun runtime behavior](research/await-async-module-mock.md). Its original v1.0 target is under review.
