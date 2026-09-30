@@ -36,3 +36,21 @@ for (const preset of ['recommended', 'strict', 'all']) {
     assert.equal(dotenvResult.messages[0].severity, 1);
   });
 }
+it('ships prefer-bun-shell in strict and all but not recommended', async () => {
+  await Promise.all(
+    ['recommended', 'strict', 'all'].map(async (preset) => {
+      const eslint = new ESLint({ overrideConfigFile: true, overrideConfig: [plugin.configs[preset]] });
+      const [result] = await eslint.lintText(
+        "import { exec } from 'node:child_process'; exec('echo hello');",
+      );
+      const shellMessage = result.messages.find((message) => message.ruleId === 'bun/prefer-bun-shell');
+      assert.equal(Boolean(shellMessage), preset !== 'recommended');
+      if (shellMessage) {
+        assert.equal(shellMessage.message, 'Consider Bun Shell for shell-oriented process execution.');
+        assert.equal(shellMessage.line, 1);
+        assert.equal(shellMessage.column, 44);
+        assert.equal(shellMessage.endColumn, 48);
+      }
+    }),
+  );
+});

@@ -30,7 +30,7 @@ export function runRuleTests(RuleTester, plugin) {
                 )
               : (item.errors
                 ?? Array.from({ length: item.count }, () => ({
-                  messageId: name === 'no-dotenv' ? 'noDotenv' : 'preferBun',
+                  messageId: item.messageId ?? (name === 'no-dotenv' ? 'noDotenv' : 'preferBun'),
                 }))),
           output: null,
         }),

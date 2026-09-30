@@ -1,6 +1,7 @@
 import packageJson from '../package.json' with { type: 'json' };
 import noDotenv from './rules/no-dotenv.js';
 import preferBunFile from './rules/prefer-bun-file.js';
+import preferBunShell from './rules/prefer-bun-shell.js';
 import preferBunSpawn from './rules/prefer-bun-spawn.js';
 import preferBunWrite from './rules/prefer-bun-write.js';
 import preferImportMetaDir from './rules/prefer-import-meta-dir.js';
@@ -15,6 +16,7 @@ const rules = {
   'prefer-bun-file': preferBunFile,
   'prefer-bun-write': preferBunWrite,
   'prefer-bun-spawn': preferBunSpawn,
+  'prefer-bun-shell': preferBunShell,
   'prefer-import-meta-path': preferImportMetaPath,
   'no-dotenv': noDotenv,
 };
@@ -25,10 +27,13 @@ const plugin: ESLint.Plugin & { rules: typeof rules; configs: Record<Preset, Lin
   configs: {} as Record<Preset, Linter.Config>,
 };
 for (const preset of ['recommended', 'strict', 'all'] as const) {
+  const presetRules = Object.keys(rules).filter(
+    (name) => name !== 'prefer-bun-shell' || preset !== 'recommended',
+  );
   plugin.configs[preset] = {
     name: `bun/${preset}`,
     plugins: { bun: plugin },
-    rules: Object.fromEntries(Object.keys(rules).map((name) => [`bun/${name}`, 'warn' as const])),
+    rules: Object.fromEntries(presetRules.map((name) => [`bun/${name}`, 'warn' as const])),
   };
 }
 export default plugin;

@@ -110,6 +110,81 @@ for (const [name, methods, modules] of [
     invalid,
   };
 }
+
+const shell = { valid: [], invalid: [] };
+for (const source of ['child_process', 'node:child_process']) {
+  for (const method of ['exec', 'execSync']) {
+    for (const code of [
+      `import { ${method} } from '${source}'; ${method}('echo hello');`,
+      `import { ${method} as run } from '${source}'; run('echo hello');`,
+      `import * as cp from '${source}'; cp.${method}('echo hello');`,
+      `import cp from '${source}'; cp['${method}']('echo hello');`,
+      `const cp = require('${source}'); cp.${method}('echo hello');`,
+      `const { ${method}: run } = require('${source}'); run('echo hello');`,
+      `const { ${method} } = require('${source}'); ${method}('echo hello');`,
+      `require('${source}').${method}('echo hello');`,
+    ]) {
+      const directImport = code.startsWith(`import { ${method} } from`);
+      const start = directImport ? code.indexOf(`${method}(`) : -1;
+      const callee = directImport ? method : '';
+      shell.invalid.push({
+        code,
+        count: 1,
+        messageId: 'preferBunShell',
+        ...(directImport
+          ? {
+              errors: [
+                {
+                  messageId: 'preferBunShell',
+                  line: 1,
+                  column: start + 1,
+                  endLine: 1,
+                  endColumn: start + callee.length + 1,
+                },
+              ],
+            }
+          : {}),
+      });
+    }
+  }
+}
+shell.invalid.push(
+  {
+    code: "import { exec } from 'node:child_process'; exec('a'); exec('b');",
+    count: 2,
+    messageId: 'preferBunShell',
+    errors: [
+      { messageId: 'preferBunShell', line: 1, column: 44, endLine: 1, endColumn: 48 },
+      { messageId: 'preferBunShell', line: 1, column: 55, endLine: 1, endColumn: 59 },
+    ],
+  },
+  {
+    code: "import { exec as run } from 'node:child_process'; const path: string = 'a'; run(path!);",
+    count: 1,
+    messageId: 'preferBunShell',
+    ts: true,
+    errors: [{ messageId: 'preferBunShell', line: 1, column: 77, endLine: 1, endColumn: 80 }],
+  },
+);
+shell.valid.push(
+  "import { spawn } from 'node:child_process'; spawn('echo', ['hello']);",
+  "import { execFile, execFileSync, fork } from 'node:child_process'; execFile('echo'); execFileSync('echo'); fork('a');",
+  "function exec() {} exec('echo hello');",
+  "import { exec } from 'unrelated'; exec('echo hello');",
+  "import { exec } from 'node:child_process'; function f(exec) { exec('echo hello'); }",
+  "import { exec as run } from 'node:child_process'; function f(run) { run('echo hello'); }",
+  "import * as cp from 'node:child_process'; function f(cp) { cp.exec('echo hello'); }",
+  "function f(require) { const cp = require('node:child_process'); cp.exec('echo hello'); }",
+  "const cp = require('node:child_process'); cp = custom; cp.exec('echo hello');",
+  "const cp = require('node:child_process'); cp.exec = custom; cp.exec('echo hello');",
+  "import cp from 'node:child_process'; delete cp.exec; cp.exec('echo hello');",
+  "import { exec } from 'node:child_process'; exec;",
+  { code: "import type { exec } from 'node:child_process'; exec('echo hello');", ts: true },
+  { code: "import { exec } from 'node:child_process'; function f(exec: () => void) { exec(); }", ts: true },
+);
+shell.valid = shell.valid.map((item) => (typeof item === 'string' ? { code: item } : item));
+cases['prefer-bun-shell'] = shell;
+
 const importMetaPath = {
   valid: [
     'fileURLToPath(otherUrl);',

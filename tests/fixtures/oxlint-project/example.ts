@@ -7,6 +7,7 @@ await read(path, 'utf8');
 await write(path, 'hello');
 childProcess.spawn('echo', ['hello']);
 childProcess.spawnSync('echo', ['hello']);
+childProcess.execSync('echo hello');
 function shadow(read: () => void): void {
   read();
 }
