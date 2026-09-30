@@ -11,6 +11,7 @@ import preferImportMetaDir from './rules/prefer-import-meta-dir.js';
 import preferImportMetaMain from './rules/prefer-import-meta-main.js';
 import preferImportMetaPath from './rules/prefer-import-meta-path.js';
 import preferImportMetaResolve from './rules/prefer-import-meta-resolve.js';
+import preferMockRestoreInAfterEach from './rules/prefer-mock-restore-in-after-each.js';
 
 import type { ESLint, Linter } from 'eslint';
 
@@ -27,12 +28,14 @@ const rules = {
   'no-dotenv': noDotenv,
   'prefer-import-meta-resolve': preferImportMetaResolve,
   'no-late-module-mock': noLateModuleMock,
+  'prefer-mock-restore-in-after-each': preferMockRestoreInAfterEach,
 };
 const strictOnly = new Set([
   'prefer-bun-shell',
   'prefer-fetch',
   'prefer-import-meta-resolve',
   'no-late-module-mock',
+  'prefer-mock-restore-in-after-each',
 ]);
 type Preset = 'recommended' | 'strict' | 'all';
 const plugin: ESLint.Plugin & { rules: typeof rules; configs: Record<Preset, Linter.Config> } = {
