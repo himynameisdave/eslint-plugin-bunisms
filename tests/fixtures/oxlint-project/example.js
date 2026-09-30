@@ -1,4 +1,8 @@
 import 'dotenv/config';
+import './mock-target';
+
+import { mock } from 'bun:test';
+mock.module('./mock-target', () => ({}));
 
 import { exec, spawn, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';

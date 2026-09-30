@@ -1,5 +1,9 @@
+import './mock-target';
+
+import { mock } from 'bun:test';
 import * as childProcess from 'node:child_process';
 import { createHash } from 'node:crypto';
+mock.module('./mock-target', () => ({}));
 import { readFile as read, writeFile as write } from 'node:fs/promises';
 import { fileURLToPath as toPath } from 'node:url';
 toPath(import.meta.url);

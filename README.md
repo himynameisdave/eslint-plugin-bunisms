@@ -62,10 +62,11 @@ ESLint needs [`jiti`](https://github.com/unjs/jiti) to load a TypeScript config 
 | [bun/prefer-import-meta-main](docs/rules/prefer-import-meta-main.md)       | `import.meta.main` instead of entrypoint comparisons                         |
 | [bun/prefer-import-meta-resolve](docs/rules/prefer-import-meta-resolve.md) | Consider ESM module resolution with `import.meta.resolve()` (strict and all) |
 | [bun/no-dotenv](docs/rules/no-dotenv.md)                                   | Avoid redundant standard dotenv initialization when targeting Bun            |
+| [bun/no-late-module-mock](docs/rules/no-late-module-mock.md)               | Warn when a static import can run before `mock.module()` (strict and all)    |
 
 Rules recognize imports, aliases and CommonJS bindings, respecting lexical scope. The exception is `prefer-import-meta-resolve`, which only checks direct global `require.resolve()` calls and skips CommonJS files. They report calls and entrypoint comparisons without automatically rewriting them. Review runtime compatibility and semantics before migrating.
 
-The `recommended`, `strict` and `all` ESLint presets enable rules as warnings. `prefer-bun-shell` and `prefer-import-meta-resolve` are limited to `strict` and `all` because shell behavior, callback handling and module resolution semantics need deliberate migration. Override individual rules after the preset:
+The `recommended`, `strict` and `all` ESLint presets enable rules as warnings. `prefer-bun-shell`, `prefer-import-meta-resolve` and `no-late-module-mock` are limited to `strict` and `all` because shell behavior, callback handling, module resolution semantics and module mock timing need deliberate migration. Override individual rules after the preset:
 
 ```ts
 export default [bun.configs.recommended, { rules: { 'bun/prefer-bun-file': 'error' } }];

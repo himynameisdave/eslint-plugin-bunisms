@@ -20,6 +20,12 @@ export function isGlobal(context: Rule.RuleContext, node: Node, name: string): b
   return node.type === 'Identifier' && node.name === name && !variableFor(context, node)?.defs.length;
 }
 
+/** TypeScript `type` imports and exports (declarations or specifiers) never exist at runtime. */
+export function isTypeOnly(node: object): boolean {
+  const { importKind, exportKind } = node as { importKind?: string; exportKind?: string };
+  return importKind === 'type' || exportKind === 'type';
+}
+
 export function propertyName(node: Node, computed: boolean): string | undefined {
   if (!computed && node.type === 'Identifier') {
     return node.name;
@@ -90,10 +96,7 @@ export function resolveBuiltin(
   if (definition.type === 'ImportBinding') {
     const declaration = definition.parent;
     // Type-only imports cannot identify a runtime API.
-    if (
-      (declaration as Node & { importKind?: string }).importKind === 'type'
-      || (definition.node as Node & { importKind?: string }).importKind === 'type'
-    ) {
+    if (isTypeOnly(declaration) || isTypeOnly(definition.node)) {
       return;
     }
     const source = declaration.source.value;
@@ -101,6 +104,10 @@ export function resolveBuiltin(
       return;
     }
     const specifier = definition.node;
+    // `bun:` modules have no default export.
+    if (specifier.type === 'ImportDefaultSpecifier' && source.startsWith('bun:')) {
+      return;
+    }
     const path =
       specifier.type === 'ImportSpecifier'
         ? [
