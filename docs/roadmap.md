@@ -8,7 +8,7 @@ One rule per minor release after 0.1.0 testing. Third-party migrations and the d
 | [bun/prefer-import-meta-dir](https://github.com/himynameisdave/eslint-plugin-bunisms/issues/2)                            | v1.0      |
 | [bun/prefer-import-meta-main](https://github.com/himynameisdave/eslint-plugin-bunisms/issues/3)                           | v1.0      |
 | [bun/no-dotenv](https://github.com/himynameisdave/eslint-plugin-bunisms/issues/4)                                         | v1.0      |
-| [bun/prefer-bun-crypto-hasher](https://github.com/himynameisdave/eslint-plugin-bunisms/issues/5)                          | v1.0      |
+| [bun/prefer-bun-crypto-hasher](https://github.com/himynameisdave/eslint-plugin-bunisms/issues/5)                          | v0.6.0    |
 | [bun/prefer-bun-shell](https://github.com/himynameisdave/eslint-plugin-bunisms/issues/6)                                  | v1.0      |
 | [bun/await-async-module-mock](https://github.com/himynameisdave/eslint-plugin-bunisms/issues/7)                           | v1.0      |
 | [bun/no-late-module-mock](https://github.com/himynameisdave/eslint-plugin-bunisms/issues/8)                               | v1.0      |

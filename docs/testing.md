@@ -66,3 +66,43 @@ it does not publish or combine the planned releases.
   (365 shared fixtures). Clean npm tarball integration passed with both ESLint
   majors and Oxlint on JS/TS, including ten expected fixture diagnostics.
   Type checking, linting and formatting checks also passed.
+
+## prefer-bun-crypto-hasher validation
+
+September 29, 2026: the rule recognizes direct `crypto.createHash()` calls with
+a literal algorithm, one or more chained `.update()` calls, and either no
+digest encoding or `hex`, `base64` or `base64url` (both runtimes return a
+`Buffer` without one). It excludes HMAC, XOF algorithms, dynamic or unsupported
+algorithms, mutable/shadowed bindings, stored hash instances and other digest
+encodings. It provides no fix or suggestion. See the rule documentation for the
+full report boundary.
+
+- Official [Bun hashing docs](https://bun.sh/docs/runtime/hashing#buncryptohasher)
+  document the supported algorithms, incremental updates and encodings; they
+  identify `Bun.hash` as non-cryptographic. Bun's
+  [Node `Hash.update()` reference](https://bun.sh/reference/node/crypto/Hash/update)
+  documents compatible streaming input. `Bun.CryptoHasher` on Bun 1.4.2
+  matched digests recorded from real Node 22.22.2 for SHA-256 and SHA3-256,
+  with multiple updates and each of the three supported digest encodings.
+  (`bun test` swaps `node:crypto` for Bun's own, so the test uses recorded
+  Node output.) Real Node rejects `blake2b256` and `md4`, and Bun hashes
+  `'utf-16le'` update input differently, so the rule skips them.
+- 573 shared JS/TS fixtures pass under ESLint 9.39.5 and 10.11.0 on Node 22,
+  and through Oxlint 1.85.0. They cover import forms, CommonJS, shadowing,
+  HMAC exclusion, incompatible options/encodings, multiple reports and exact
+  diagnostic location. Clean packed-package checks pass with ESLint 9, ESLint
+  10 and Oxlint.
+- Read-only dogfood covered 687 files in
+  [Elysia at `e037eca`](https://github.com/elysiajs/elysia/tree/e037eca710e7ad193be09cc6615ab0dbe54af914)
+  and [Hono at `37ce069`](https://github.com/honojs/hono/tree/37ce06904e732d4bc11c9075adf362c76049a594), with no
+  parse errors. Elysia had no findings. Hono had five findings, all in test
+  files; each was reviewed. They compare hash implementations or pass a hash
+  callback to test timing-safe equality. They are valid migration candidates
+  when those tests run under Bun, while Node and Fastly test targets should
+  retain Node's API. Scope this warning preset to Bun-targeted files in
+  multi-runtime repositories.
+
+Runtime comparisons ran on Bun 1.4.2; minimum-version runtime execution on Bun
+1.4.0 is not recorded here. This implementation does not publish or bump the
+package version; the rule remains planned for its own 0.6.0 release after the
+release sequence and dogfooding described in `VERSIONING.md`.

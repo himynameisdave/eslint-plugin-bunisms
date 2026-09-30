@@ -1,5 +1,9 @@
 // Shared by ESLint RuleTester (Bun and Node) and the real Oxlint CLI.
 export const cases = {};
+const items = (entries) => entries.map((entry) => (typeof entry === 'string' ? { code: entry } : entry));
+const withCount = (entries, pattern) =>
+  items(entries).map((item) => Object.assign(item, { count: item.code.match(pattern)?.length ?? 1 }));
+
 cases['no-dotenv'] = {
   valid: [
     "import dotenv from 'dotenv'; dotenv.config({ path: getCustomEnvironmentPath() });",
@@ -44,6 +48,69 @@ cases['no-dotenv'] = {
     { code: "import dotenv from 'dotenv'; dotenv.config({});", count: 1 },
   ],
 };
+cases['prefer-bun-crypto-hasher'] = {
+  valid: items([
+    "import { createHmac } from 'node:crypto'; createHmac('sha256', key).update(data).digest('hex');",
+    "import { createHash } from 'node:crypto'; createHash(algorithm).update(data).digest('hex');",
+    "import { createHash } from 'node:crypto'; createHash('shake128').update(data).digest('hex');",
+    "import { createHash } from 'node:crypto'; createHash('md4').update(data).digest('hex');",
+    "import { createHash } from 'node:crypto'; createHash('blake2b256').update(data).digest('hex');",
+    "import { createHash } from 'node:crypto'; createHash('sha256').update(data, 'utf-16le').digest('hex');",
+    "import { createHash } from 'node:crypto'; createHash('sha256', { outputLength: 16 }).update(data).digest('hex');",
+    "import { createHash } from 'node:crypto'; createHash('sha256').update(data).digest('latin1');",
+    "import { createHash } from 'node:crypto'; createHash('sha256').update(data, encoding).digest('hex');",
+    "import { createHash } from 'node:crypto'; const hash = createHash('sha256'); hash.update(data); hash.digest('hex');",
+    "import { createHash } from 'unrelated'; createHash('sha256').update(data).digest('hex');",
+    "function createHash() { return { update() { return this; }, digest() {} }; } createHash('sha256').update(data).digest('hex');",
+    "const crypto = { createHash() { return { update() { return this; }, digest() {} }; } }; crypto.createHash('sha256').update(data).digest('hex');",
+    "import { createHash } from 'node:crypto'; function f(createHash) { createHash('sha256').update(data).digest('hex'); }",
+    "import * as crypto from 'node:crypto'; function f(crypto) { crypto.createHash('sha256').update(data).digest('hex'); }",
+    "function f(require) { const { createHash } = require('node:crypto'); createHash('sha256').update(data).digest('hex'); }",
+    "import * as crypto from 'node:crypto'; crypto.createHash('sha256').update(data).digest('hex'); crypto.createHash = custom;",
+    {
+      code: "import type { createHash } from 'node:crypto'; createHash('sha256').update(data).digest('hex');",
+      ts: true,
+    },
+  ]),
+  invalid: withCount(
+    [
+      {
+        code: "import { createHash } from 'node:crypto'; createHash('sha256').update(data).digest('hex');",
+        errors: [
+          {
+            messageId: 'preferBunCryptoHasher',
+            line: 1,
+            column: 43,
+            endLine: 1,
+            endColumn: 90,
+            suggestions: [],
+          },
+        ],
+      },
+      "import { createHash as hash } from 'crypto'; hash('sha512').update(data).digest('base64');",
+      "import * as crypto from 'node:crypto'; crypto['createHash']('sha256').update(data).update(other).digest('base64url');",
+      "import crypto from 'crypto'; crypto.createHash('sha3-256').update(data).digest('hex');",
+      "import { createHash } from 'node:crypto'; createHash('sha256').update(data).digest();",
+      "import { createHash } from 'node:crypto'; createHash('md5').update(text, 'utf-8').digest('hex');",
+      "import { createHash } from 'node:crypto'; createHash('sha256')?.update(data).digest('hex');",
+      "import { createHash } from 'node:crypto'; createHash('sha256').update?.(data).digest('hex');",
+      "const { createHash } = require('node:crypto'); createHash('sha256').update(data).digest('hex');",
+      {
+        code: "const { createHash } = require('node:crypto'); createHash('sha256').update(data).digest('hex');",
+        sourceType: 'commonjs',
+      },
+      "const crypto = require('crypto'); crypto.createHash('sha256').update(data).digest('hex');",
+      "require('node:crypto').createHash('sha256').update(data).digest('hex');",
+      "import { createHash as hash } from 'node:crypto'; hash('sha256').update(first).update(second).digest('hex'); hash('md5').update(data).digest('hex');",
+      {
+        code: "import { createHash } from 'node:crypto'; createHash('sha256').update(data).digest('hex');",
+        ts: true,
+      },
+    ],
+    /\.digest\((?:'(?:hex|base64|base64url)')?\)/gu,
+  ),
+};
+
 for (const [name, methods, modules] of [
   ['prefer-bun-file', ['readFile'], ['fs', 'node:fs', 'fs/promises', 'node:fs/promises']],
   ['prefer-bun-write', ['writeFile'], ['fs', 'node:fs', 'fs/promises', 'node:fs/promises']],
@@ -190,8 +257,8 @@ shell.valid.push(
 shell.valid = shell.valid.map((item) => (typeof item === 'string' ? { code: item } : item));
 cases['prefer-bun-shell'] = shell;
 
-const importMetaPath = {
-  valid: [
+cases['prefer-import-meta-path'] = {
+  valid: items([
     'fileURLToPath(otherUrl);',
     "import { fileURLToPath } from 'unrelated'; fileURLToPath(import.meta.url);",
     'function fileURLToPath(value) {} fileURLToPath(import.meta.url);',
@@ -206,31 +273,23 @@ const importMetaPath = {
       code: "import { fileURLToPath } from 'node:url'; function f(fileURLToPath: (url: string) => string) { fileURLToPath(import.meta.url); }",
       ts: true,
     },
-  ],
-  invalid: [
-    "import { fileURLToPath } from 'url'; fileURLToPath(import.meta.url);",
-    "import { fileURLToPath } from 'node:url'; fileURLToPath(import.meta.url);",
-    "import { fileURLToPath as toPath } from 'node:url'; toPath(import.meta.url);",
-    "import * as url from 'node:url'; url.fileURLToPath(import.meta.url);",
-    "import url from 'node:url'; url.fileURLToPath(import.meta.url);",
-    "const url = require('node:url'); url.fileURLToPath(import.meta.url);",
-    "const { fileURLToPath } = require('url'); fileURLToPath(import.meta.url);",
-    "require('node:url').fileURLToPath(import.meta.url);",
-    "import { fileURLToPath } from 'node:url'; fileURLToPath(import.meta.url); fileURLToPath(import.meta.url);",
-    { code: "import { fileURLToPath } from 'node:url'; fileURLToPath(import.meta.url);", ts: true },
-  ].map((entry) => ({
-    code: typeof entry === 'string' ? entry : entry.code,
-    ts: typeof entry === 'string' ? undefined : entry.ts,
-    count:
-      (typeof entry === 'string' ? entry : entry.code).match(
-        /(?:require\('[^']+'\)\.)?[\w$.]+\(import\.meta\.url\)/gu,
-      )?.length ?? 1,
-  })),
+  ]),
+  invalid: withCount(
+    [
+      "import { fileURLToPath } from 'url'; fileURLToPath(import.meta.url);",
+      "import { fileURLToPath } from 'node:url'; fileURLToPath(import.meta.url);",
+      "import { fileURLToPath as toPath } from 'node:url'; toPath(import.meta.url);",
+      "import * as url from 'node:url'; url.fileURLToPath(import.meta.url);",
+      "import url from 'node:url'; url.fileURLToPath(import.meta.url);",
+      "const url = require('node:url'); url.fileURLToPath(import.meta.url);",
+      "const { fileURLToPath } = require('url'); fileURLToPath(import.meta.url);",
+      "require('node:url').fileURLToPath(import.meta.url);",
+      "import { fileURLToPath } from 'node:url'; fileURLToPath(import.meta.url); fileURLToPath(import.meta.url);",
+      { code: "import { fileURLToPath } from 'node:url'; fileURLToPath(import.meta.url);", ts: true },
+    ],
+    /(?:require\('[^']+'\)\.)?[\w$.]+\(import\.meta\.url\)/gu,
+  ),
 };
-importMetaPath.valid = importMetaPath.valid.map((entry) =>
-  typeof entry === 'string' ? { code: entry } : entry,
-);
-cases['prefer-import-meta-path'] = importMetaPath;
 
 const dirImports = "import { dirname } from 'node:path'; import { fileURLToPath } from 'node:url';";
 const dirExpression = 'dirname(fileURLToPath(import.meta.url))';

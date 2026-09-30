@@ -6,7 +6,11 @@ const directory = await mkdtemp(join(tmpdir(), 'bunisms-package-'));
 const root = process.cwd();
 function run(args: string[], cwd = directory): string {
   const result = Bun.spawnSync(args, { cwd });
-  assert.equal(result.exitCode, 0, result.stderr.toString() + result.stdout.toString());
+  assert.equal(
+    result.exitCode,
+    0,
+    `${args.join(' ')}\n${result.stderr.toString()}${result.stdout.toString()}`,
+  );
   return result.stdout.toString();
 }
 try {
@@ -38,7 +42,7 @@ try {
     'node',
     '--input-type=module',
     '-e',
-    "import plugin from 'eslint-plugin-bunisms'; if(Object.keys(plugin.rules).length !== 8) process.exit(1)",
+    "import plugin from 'eslint-plugin-bunisms'; if(Object.keys(plugin.rules).length !== 9) process.exit(1)",
   ]);
   const pkg = JSON.parse(await readFile(join(root, 'package.json'), 'utf8'));
   // Install real consumers only after proving the package works without ESLint.
@@ -70,6 +74,7 @@ try {
     assert.equal(file.errorCount, 0);
     assert.deepEqual(file.messages.map((message: { ruleId: string }) => message.ruleId).toSorted(), [
       'bun/no-dotenv',
+      'bun/prefer-bun-crypto-hasher',
       'bun/prefer-bun-file',
       'bun/prefer-bun-spawn',
       'bun/prefer-bun-spawn',
@@ -87,11 +92,11 @@ try {
       join(directory, 'oxlint-project'),
     ),
   );
-  assert.equal(oxlintOutput.diagnostics.length, 19);
+  assert.equal(oxlintOutput.diagnostics.length, 21);
   for (const diagnostic of oxlintOutput.diagnostics) {
     assert.match(
       diagnostic.code,
-      /^bun\((?:no-dotenv|prefer-(?:bun-(?:file|write|spawn|shell)|import-meta-(?:path|dir|main)))\)$/u,
+      /^bun\((?:no-dotenv|prefer-(?:bun-(?:crypto-hasher|file|write|spawn|shell)|import-meta-(?:path|dir|main)))\)$/u,
     );
   }
   await writeFile(
