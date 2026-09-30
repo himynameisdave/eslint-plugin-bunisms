@@ -1,5 +1,6 @@
 import packageJson from '../package.json' with { type: 'json' };
 import noDotenv from './rules/no-dotenv.js';
+import preferBunCryptoHasher from './rules/prefer-bun-crypto-hasher.js';
 import preferBunFile from './rules/prefer-bun-file.js';
 import preferBunShell from './rules/prefer-bun-shell.js';
 import preferBunSpawn from './rules/prefer-bun-spawn.js';
@@ -14,6 +15,7 @@ const rules = {
   'prefer-import-meta-dir': preferImportMetaDir,
   'prefer-import-meta-main': preferImportMetaMain,
   'prefer-bun-file': preferBunFile,
+  'prefer-bun-crypto-hasher': preferBunCryptoHasher,
   'prefer-bun-write': preferBunWrite,
   'prefer-bun-spawn': preferBunSpawn,
   'prefer-bun-shell': preferBunShell,

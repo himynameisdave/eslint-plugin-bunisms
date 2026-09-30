@@ -44,6 +44,72 @@ cases['no-dotenv'] = {
     { code: "import dotenv from 'dotenv'; dotenv.config({});", count: 1 },
   ],
 };
+const cryptoHasher = {
+  valid: [
+    "import { createHmac } from 'node:crypto'; createHmac('sha256', key).update(data).digest('hex');",
+    "import { createHash } from 'node:crypto'; createHash('sha256').update(data).digest();",
+    "import { createHash } from 'node:crypto'; createHash(algorithm).update(data).digest('hex');",
+    "import { createHash } from 'node:crypto'; createHash('shake128').update(data).digest('hex');",
+    "import { createHash } from 'node:crypto'; createHash('sha256', { outputLength: 16 }).update(data).digest('hex');",
+    "import { createHash } from 'node:crypto'; createHash('sha256').update(data).digest('latin1');",
+    "import { createHash } from 'node:crypto'; createHash('sha256').update(data, encoding).digest('hex');",
+    "import { createHash } from 'node:crypto'; const hash = createHash('sha256'); hash.update(data); hash.digest('hex');",
+    "import { createHash } from 'unrelated'; createHash('sha256').update(data).digest('hex');",
+    "function createHash() { return { update() { return this; }, digest() {} }; } createHash('sha256').update(data).digest('hex');",
+    "const crypto = { createHash() { return { update() { return this; }, digest() {} }; } }; crypto.createHash('sha256').update(data).digest('hex');",
+    "import { createHash } from 'node:crypto'; function f(createHash) { createHash('sha256').update(data).digest('hex'); }",
+    "import * as crypto from 'node:crypto'; function f(crypto) { crypto.createHash('sha256').update(data).digest('hex'); }",
+    "function f(require) { const { createHash } = require('node:crypto'); createHash('sha256').update(data).digest('hex'); }",
+    "import * as crypto from 'node:crypto'; crypto.createHash('sha256').update(data).digest('hex'); crypto.createHash = custom;",
+    {
+      code: "import type { createHash } from 'node:crypto'; createHash('sha256').update(data).digest('hex');",
+      ts: true,
+    },
+  ],
+  invalid: [
+    {
+      code: "import { createHash } from 'node:crypto'; createHash('sha256').update(data).digest('hex');",
+      errors: [
+        {
+          messageId: 'preferBunCryptoHasher',
+          line: 1,
+          column: 43,
+          endLine: 1,
+          endColumn: 90,
+          suggestions: [],
+        },
+      ],
+    },
+    "import { createHash as hash } from 'crypto'; hash('sha512').update(data).digest('base64');",
+    "import * as crypto from 'node:crypto'; crypto['createHash']('sha256').update(data).update(other).digest('base64url');",
+    "import crypto from 'crypto'; crypto.createHash('sha3-256').update(data).digest('hex');",
+    "const { createHash } = require('node:crypto'); createHash('sha256').update(data).digest('hex');",
+    {
+      code: "const { createHash } = require('node:crypto'); createHash('sha256').update(data).digest('hex');",
+      sourceType: 'commonjs',
+    },
+    "const crypto = require('crypto'); crypto.createHash('sha256').update(data).digest('hex');",
+    "require('node:crypto').createHash('sha256').update(data).digest('hex');",
+    "import { createHash as hash } from 'node:crypto'; hash('sha256').update(first).update(second).digest('hex'); hash('md5').update(data).digest('hex');",
+    {
+      code: "import { createHash } from 'node:crypto'; createHash('sha256').update(data).digest('hex');",
+      ts: true,
+    },
+  ].map((entry) => ({
+    code: typeof entry === 'string' ? entry : entry.code,
+    ts: typeof entry === 'string' ? undefined : entry.ts,
+    sourceType: typeof entry === 'string' ? undefined : entry.sourceType,
+    errors: typeof entry === 'string' ? undefined : entry.errors,
+    count:
+      (typeof entry === 'string' ? entry : entry.code).match(/\.digest\('(?:hex|base64|base64url)'\)/gu)
+        ?.length ?? 1,
+  })),
+};
+cryptoHasher.valid = cryptoHasher.valid.map((entry) =>
+  typeof entry === 'string' ? { code: entry } : entry,
+);
+cases['prefer-bun-crypto-hasher'] = cryptoHasher;
+
 for (const [name, methods, modules] of [
   ['prefer-bun-file', ['readFile'], ['fs', 'node:fs', 'fs/promises', 'node:fs/promises']],
   ['prefer-bun-write', ['writeFile'], ['fs', 'node:fs', 'fs/promises', 'node:fs/promises']],

@@ -27,6 +27,7 @@ export default defineConfig({
     'bun/prefer-bun-file': 'warn',
     'bun/prefer-bun-write': 'warn',
     'bun/prefer-bun-spawn': 'warn',
+    'bun/prefer-bun-crypto-hasher': 'warn',
     'bun/prefer-import-meta-path': 'warn',
     'bun/prefer-import-meta-dir': 'warn',
     'bun/prefer-import-meta-main': 'warn',
@@ -49,16 +50,17 @@ ESLint needs [`jiti`](https://github.com/unjs/jiti) to load a TypeScript config 
 
 ## Rules
 
-| Rule                                                                 | Recommends                                                                 |
-| -------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| [bun/prefer-bun-file](docs/rules/prefer-bun-file.md)                 | `Bun.file()` instead of Node's `readFile()`                                |
-| [bun/prefer-bun-write](docs/rules/prefer-bun-write.md)               | `Bun.write()` instead of Node's `writeFile()`                              |
-| [bun/prefer-bun-spawn](docs/rules/prefer-bun-spawn.md)               | `Bun.spawn()` / `Bun.spawnSync()` instead of Node's subprocess equivalents |
-| [bun/prefer-bun-shell](docs/rules/prefer-bun-shell.md)               | Bun Shell instead of shell-oriented `exec()` calls (strict and all)        |
-| [bun/prefer-import-meta-path](docs/rules/prefer-import-meta-path.md) | `import.meta.path` instead of `fileURLToPath(import.meta.url)`             |
-| [bun/prefer-import-meta-dir](docs/rules/prefer-import-meta-dir.md)   | `import.meta.dir` instead of `dirname(fileURLToPath(import.meta.url))`     |
-| [bun/prefer-import-meta-main](docs/rules/prefer-import-meta-main.md) | `import.meta.main` instead of entrypoint comparisons                       |
-| [bun/no-dotenv](docs/rules/no-dotenv.md)                             | Avoid redundant standard dotenv initialization when targeting Bun          |
+| Rule                                                                   | Recommends                                                                 |
+| ---------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| [bun/prefer-bun-file](docs/rules/prefer-bun-file.md)                   | `Bun.file()` instead of Node's `readFile()`                                |
+| [bun/prefer-bun-write](docs/rules/prefer-bun-write.md)                 | `Bun.write()` instead of Node's `writeFile()`                              |
+| [bun/prefer-bun-spawn](docs/rules/prefer-bun-spawn.md)                 | `Bun.spawn()` / `Bun.spawnSync()` instead of Node's subprocess equivalents |
+| [bun/prefer-bun-crypto-hasher](docs/rules/prefer-bun-crypto-hasher.md) | `Bun.CryptoHasher` instead of supported `createHash()` chains              |
+| [bun/prefer-bun-shell](docs/rules/prefer-bun-shell.md)                 | Bun Shell instead of shell-oriented `exec()` calls (strict and all)        |
+| [bun/prefer-import-meta-path](docs/rules/prefer-import-meta-path.md)   | `import.meta.path` instead of `fileURLToPath(import.meta.url)`             |
+| [bun/prefer-import-meta-dir](docs/rules/prefer-import-meta-dir.md)     | `import.meta.dir` instead of `dirname(fileURLToPath(import.meta.url))`     |
+| [bun/prefer-import-meta-main](docs/rules/prefer-import-meta-main.md)   | `import.meta.main` instead of entrypoint comparisons                       |
+| [bun/no-dotenv](docs/rules/no-dotenv.md)                               | Avoid redundant standard dotenv initialization when targeting Bun          |
 
 Rules recognize imports, aliases and CommonJS bindings, respecting lexical scope. They report calls and entrypoint comparisons without automatically rewriting them. Review runtime compatibility and semantics before migrating.
 

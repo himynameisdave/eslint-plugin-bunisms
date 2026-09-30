@@ -1,7 +1,9 @@
 import * as childProcess from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { readFile as read, writeFile as write } from 'node:fs/promises';
 import { fileURLToPath as toPath } from 'node:url';
 toPath(import.meta.url);
+createHash('sha256').update('hello').digest('hex');
 const path: string = 'input.txt';
 await read(path, 'utf8');
 await write(path, 'hello');
