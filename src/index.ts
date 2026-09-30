@@ -1,4 +1,5 @@
 import packageJson from '../package.json' with { type: 'json' };
+import noDotenv from './rules/no-dotenv.js';
 import preferBunFile from './rules/prefer-bun-file.js';
 import preferBunSpawn from './rules/prefer-bun-spawn.js';
 import preferBunWrite from './rules/prefer-bun-write.js';
@@ -15,6 +16,7 @@ const rules = {
   'prefer-bun-write': preferBunWrite,
   'prefer-bun-spawn': preferBunSpawn,
   'prefer-import-meta-path': preferImportMetaPath,
+  'no-dotenv': noDotenv,
 };
 type Preset = 'recommended' | 'strict' | 'all';
 const plugin: ESLint.Plugin & { rules: typeof rules; configs: Record<Preset, Linter.Config> } = {

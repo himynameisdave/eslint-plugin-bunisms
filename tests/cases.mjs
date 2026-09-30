@@ -1,5 +1,35 @@
 // Shared by ESLint RuleTester (Bun and Node) and the real Oxlint CLI.
 export const cases = {};
+cases['no-dotenv'] = {
+  valid: [
+    "import dotenv from 'dotenv'; dotenv.config({ path: getCustomEnvironmentPath() });",
+    "import dotenv from 'dotenv'; dotenv.config({ override: true });",
+    "import dotenv from 'dotenv'; dotenv.config(options);",
+    "import { config } from 'unrelated'; config();",
+    'function config() {} config();',
+    'function f(dotenv) { dotenv.config(); }',
+    "import dotenv from 'dotenv'; function f(dotenv) { dotenv.config(); }",
+    "import dotenv from 'dotenv'; dotenv.config = custom; dotenv.config();",
+    { code: "import type dotenv from 'dotenv'; dotenv.config();", ts: true },
+    { code: "import type { config } from 'dotenv'; config();", ts: true },
+    "import 'dotenv/config.js';",
+    "function f(require) { require('dotenv/config'); }",
+    "function f(require) { const dotenv = require('dotenv'); dotenv.config(); }",
+  ].map((item) => (typeof item === 'string' ? { code: item } : item)),
+  invalid: [
+    { code: "import 'dotenv/config';", count: 1 },
+    { code: "import dotenv from 'dotenv'; dotenv.config();", count: 1 },
+    { code: "import * as dotenv from 'dotenv'; dotenv.config();", count: 1 },
+    { code: "import { config as loadEnv } from 'dotenv'; loadEnv();", count: 1 },
+    { code: "import dotenv from 'dotenv'; dotenv['config']();", count: 1 },
+    { code: "const dotenv = require('dotenv'); dotenv.config();", count: 1 },
+    { code: "const { config: loadEnv } = require('dotenv'); loadEnv();", count: 1 },
+    { code: "require('dotenv').config();", count: 1 },
+    { code: "require('dotenv/config');", count: 1 },
+    { code: "import 'dotenv/config'; import 'dotenv/config';", count: 2 },
+    { code: "import { config } from 'dotenv'; config();", count: 1, ts: true },
+  ],
+};
 for (const [name, methods, modules] of [
   ['prefer-bun-file', ['readFile'], ['fs', 'node:fs', 'fs/promises', 'node:fs/promises']],
   ['prefer-bun-write', ['writeFile'], ['fs', 'node:fs', 'fs/promises', 'node:fs/promises']],

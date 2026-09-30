@@ -57,11 +57,11 @@ ESLint needs [`jiti`](https://github.com/unjs/jiti) to load a TypeScript config 
 | [bun/prefer-import-meta-path](docs/rules/prefer-import-meta-path.md) | `import.meta.path` instead of `fileURLToPath(import.meta.url)`             |
 | [bun/prefer-import-meta-dir](docs/rules/prefer-import-meta-dir.md)   | `import.meta.dir` instead of `dirname(fileURLToPath(import.meta.url))`     |
 | [bun/prefer-import-meta-main](docs/rules/prefer-import-meta-main.md) | `import.meta.main` instead of entrypoint comparisons                       |
+| [bun/no-dotenv](docs/rules/no-dotenv.md)                             | Avoid redundant standard dotenv initialization when targeting Bun          |
 
 Rules recognize imports, aliases and CommonJS bindings, respecting lexical scope. They report calls and entrypoint comparisons without automatically rewriting them. Review runtime compatibility and semantics before migrating.
 
-The `recommended`, `strict` and `all` ESLint presets currently enable all six rules as warnings. Override individual rules after the preset:
-The `recommended`, `strict` and `all` ESLint presets currently enable all four rules as warnings. Override individual rules after the preset:
+The `recommended`, `strict` and `all` ESLint presets currently enable all seven rules as warnings. Override individual rules after the preset:
 
 ```ts
 export default [bun.configs.recommended, { rules: { 'bun/prefer-bun-file': 'error' } }];
