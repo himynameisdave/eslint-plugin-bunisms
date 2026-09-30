@@ -1,36 +1,48 @@
-# bun/prefer-import-meta-path
+# prefer-import-meta-path
 
-Prefer Bun's `import.meta.path` when converting the current module URL to a filesystem path.
+📝 Prefer `import.meta.path` to convert the current module URL to a filesystem path.
 
-## Incorrect
+⚠️ This rule _warns_ in the following [configs](https://github.com/himynameisdave/eslint-plugin-bunisms#eslint): ✅ `recommended`, 🔒 `strict`, 🌐 `all`.
 
-```ts
+[`import.meta.path`](https://bun.sh/docs/runtime/module-resolution#importmeta) is the absolute path of the current module, the path equivalent of the `file:` URL in `import.meta.url`.
+
+This rule reports [`fileURLToPath()`](https://nodejs.org/api/url.html#urlfileurltopathurl-options) from `url` when called with exactly one argument, `import.meta.url`. It does not report other file URLs, extra arguments, computed properties or unrelated functions with the same name.
+
+Named, aliased, default and namespace imports are supported, with either bare or `node:` module names. CommonJS direct calls and `const` require bindings (including destructuring) are supported. Lexical shadowing and type-only imports suppress reports. No type information is used.
+
+The rule reports without a fix, because replacing the expression can require changing imports and may be wrong for shared-runtime code. `import.meta.path` is Bun-specific. Keep the Node API in files that also run in Node.js or another runtime. Disable the rule for such files or scope the preset to Bun-only code.
+
+## Examples
+
+```js
+// ❌
 import { fileURLToPath } from 'node:url';
-
 const path = fileURLToPath(import.meta.url);
-```
 
-## Preferred
-
-```ts
+// ✅
 const path = import.meta.path;
 ```
 
-Bun exposes `import.meta.path` as the absolute path of the current module. It is the path equivalent of `import.meta.url`, which is a `file:` URL. Use this rule only for code that runs on Bun.
+```js
+// ❌
+import * as url from 'node:url';
+const file = url.fileURLToPath(import.meta.url);
 
-The rule recognizes direct `fileURLToPath` imports from `url` or `node:url`, including aliases, namespace/default imports, and CommonJS `require()` bindings. It reports only a call with exactly one argument whose expression is `import.meta.url`. It does not report other file URLs, computed properties, shadowed bindings, type-only imports, or unrelated functions with the same name. It does not use TypeScript type information.
+// ✅
+const file = import.meta.path;
+```
 
-## When not to use it
+```js
+// ❌
+const { fileURLToPath: toPath } = require('url');
+const file = toPath(import.meta.url);
 
-Do not enable this rule for files that also run in Node.js or another runtime. `import.meta.path` is a Bun-specific property. The rule does not suggest a fix because replacing the expression can require changing imports and may be inappropriate for shared-runtime code.
+// ✅
+const file = import.meta.path;
+```
 
-## Options
-
-This rule has no options.
-
-## Bun compatibility
-
-The plugin targets Bun 1.4.0 and later. Bun's current documentation describes `import.meta.path` as the absolute path to the current file and `import.meta.url` as its file URL.
-
-- [Bun `import.meta` documentation](https://bun.sh/docs/runtime/module-resolution#importmeta)
-- [Bun `fileURLToPath` utility](https://bun.sh/docs/runtime/utils#bunfileurltopath)
+```js
+// ✅
+import { fileURLToPath } from 'node:url';
+const other = fileURLToPath(new URL('./data.json', import.meta.url));
+```

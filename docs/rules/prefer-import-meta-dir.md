@@ -1,47 +1,51 @@
-# bun/prefer-import-meta-dir
+# prefer-import-meta-dir
 
-Prefer `import.meta.dir` for the current module directory. Enabled as a warning in `recommended`, `strict`, and `all`.
+📝 Prefer `import.meta.dir` for the current module directory.
 
-## Behavior and rationale
+⚠️ This rule _warns_ in the following [configs](https://github.com/himynameisdave/eslint-plugin-bunisms#eslint): ✅ `recommended`, 🔒 `strict`, 🌐 `all`.
 
-Bun exposes the absolute directory of the current module directly. Report a direct `dirname(fileURLToPath(import.meta.url))` call when both functions resolve to the `path` and `url` built-ins. The containing variable's name does not matter; declarations of and assignments to `__dirname` are included.
+[`import.meta.dir`](https://bun.sh/guides/util/import-meta-dir) is the absolute directory of the current module, so there is no need to build it from `import.meta.url`.
 
-Incorrect for Bun-only code:
+This rule reports a direct [`dirname(fileURLToPath(import.meta.url))`](https://nodejs.org/api/url.html#urlfileurltopathurl-options) call when both functions resolve to the `path` and `url` built-ins. The containing variable's name does not matter; declarations of and assignments to `__dirname` are included. It does not report arbitrary paths, URLs other than the direct `import.meta.url`, extra arguments (including `fileURLToPath` platform options), optional calls, `path.posix`/`path.win32`, computed `import.meta['url']` or indirect filename variables.
+
+Named, aliased, default and namespace imports are supported, with either bare or `node:` module names. CommonJS direct calls and `const` require bindings are supported. Lexical shadowing, type-only imports and visible binding/module-property mutations suppress reports. Arbitrary data flow, monkey-patching through aliases and custom loader behavior are not analyzed. No type information is used.
+
+The rule reports without a fix; review runtime requirements and remove unused imports manually. Staying diagnostic-only avoids overlapping edits with [`prefer-import-meta-path`](./prefer-import-meta-path.md), which reports the nested `fileURLToPath(import.meta.url)` call independently. Keep the Node pattern in code shared with Node or browsers, or code relying on custom module loaders or mutated `import.meta` properties. Bundled and compiled executables need separate migration review. Disable the rule for such files or scope the preset to Bun-only code. See [the testing record](../testing.md) for validation and release caveats.
+
+## Examples
 
 ```js
+// ❌
 import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
-```
 
-Preferred:
-
-```js
+// ✅
 const __dirname = import.meta.dir;
 ```
 
-Supports named imports and import aliases, namespace/default imports, bare and `node:` specifiers, and direct unshadowed `require` calls or `const` require bindings within modules. JavaScript and TypeScript use the same binding analysis without type information.
+```js
+// ❌
+import path from 'node:path';
+import * as url from 'node:url';
+const root = path.dirname(url.fileURLToPath(import.meta.url));
 
-## Boundaries
+// ✅
+const root = import.meta.dir;
+```
 
-Unrelated functions, shadowed bindings, type-only imports, reassigned bindings and visibly mutated module objects do not report. Neither do arbitrary paths, URLs other than the direct `import.meta.url`, extra arguments (including `fileURLToPath` platform options), optional calls, `path.posix`/`path.win32`, computed `import.meta['url']`, or indirect filename variables. Arbitrary data flow, monkey-patching through aliases and custom loader behavior are not analyzed.
+```js
+// ❌
+const { dirname } = require('path');
+const { fileURLToPath } = require('url');
+const dir = dirname(fileURLToPath(import.meta.url));
 
-## Options
+// ✅
+const dir = import.meta.dir;
+```
 
-None.
-
-## Fix policy
-
-Diagnostic only: no automatic fix or editor suggestion. Review runtime requirements and remove unused imports manually. Keeping this rule diagnostic-only prevents overlapping edits with the `prefer-import-meta-path` rule; its nested conversion is independently reported by that rule without conflicting fixes.
-
-## Compatibility and when not to use it
-
-Targets Bun >=1.4.0 without raising the project's baseline. Disable it for code shared with Node or browsers, or code relying on custom module loaders or mutated `import.meta` properties. Runtime regression coverage checks normal file modules, spaces, URL-reserved characters, Unicode and symlink entry points. Bundled and compiled executables require separate migration review.
-
-Official references:
-
-- [Bun module metadata](https://bun.sh/docs/runtime/module-resolution): directory and URL refer to the current module.
-- [Bun directory guide](https://bun.sh/guides/util/import-meta-dir): direct directory access.
-- [Node fileURLToPath](https://nodejs.org/api/url.html#urlfileurltopathurl-options): decoding and platform-specific conversion options.
-
-See [the testing record](../testing.md) for validation and release caveats.
+```js
+// ✅
+import { dirname } from 'node:path';
+const parent = dirname('/tmp/file.txt');
+```
