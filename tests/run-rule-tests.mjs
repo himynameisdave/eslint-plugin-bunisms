@@ -24,7 +24,7 @@ export function runRuleTests(RuleTester, plugin) {
                     endColumn: match.index + match[0].length + 1,
                   }),
                 )
-              : Array.from({ length: item.count }, () => ({ messageId: 'preferBun' })),
+              : (item.errors ?? Array.from({ length: item.count }, () => ({ messageId: 'preferBun' }))),
           output: null,
         }),
       ),

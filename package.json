@@ -44,7 +44,7 @@
     "lint:fix": "bun run lint --fix",
     "prepare": "git config core.hooksPath .githooks",
     "prepublishOnly": "bun run check",
-    "test": "bun test tests/rules.test.ts",
+    "test": "bun test tests/rules.test.ts tests/import-meta-dir.test.ts",
     "test:node": "node --test tests/node.test.mjs",
     "test:oxlint": "bun scripts/test-oxlint.ts",
     "test:package": "bun scripts/test-package.ts",

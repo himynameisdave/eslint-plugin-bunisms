@@ -107,3 +107,88 @@ importMetaPath.valid = importMetaPath.valid.map((entry) =>
   typeof entry === 'string' ? { code: entry } : entry,
 );
 cases['prefer-import-meta-path'] = importMetaPath;
+
+const dirImports = "import { dirname } from 'node:path'; import { fileURLToPath } from 'node:url';";
+const dirExpression = 'dirname(fileURLToPath(import.meta.url))';
+const dirValid = [
+  `${dirImports} dirname(userSuppliedPath);`,
+  `${dirImports} dirname(fileURLToPath(other.url));`,
+  `${dirImports} dirname(fileURLToPath(import.meta.url, { windows: true }));`,
+  `${dirImports} dirname(fileURLToPath(import.meta.url), extra());`,
+  `${dirImports} dirname(fileURLToPath(new URL('.', import.meta.url)));`,
+  `${dirImports} dirname?.(fileURLToPath(import.meta.url));`,
+  `${dirImports} dirname(fileURLToPath?.(import.meta.url));`,
+  `${dirImports} dirname(fileURLToPath(import.meta['url']));`,
+  `${dirImports} function f(dirname) { ${dirExpression}; }`,
+  `${dirImports} function f(fileURLToPath) { ${dirExpression}; }`,
+  `function dirname(x) { return x; } function fileURLToPath(x) { return x; } ${dirExpression};`,
+  `import { dirname } from 'unrelated'; import { fileURLToPath } from 'node:url'; ${dirExpression};`,
+  `import { dirname } from 'node:path'; import { fileURLToPath } from 'unrelated'; ${dirExpression};`,
+  `import path from 'node:path'; import url from 'node:url'; path.dirname = custom; path.dirname(url.fileURLToPath(import.meta.url));`,
+  `import path from 'node:path'; import url from 'node:url'; url.fileURLToPath = custom; path.dirname(url.fileURLToPath(import.meta.url));`,
+  `function f(require) { const { dirname } = require('path'); const { fileURLToPath } = require('url'); ${dirExpression}; }`,
+  `${dirImports} const filename = fileURLToPath(import.meta.url); dirname(filename);`,
+  `import path from 'path'; import url from 'url'; path.posix.dirname(url.fileURLToPath(import.meta.url));`,
+  `import path from 'path'; import url from 'url'; path.win32.dirname(url.fileURLToPath(import.meta.url));`,
+  {
+    code: `import type { dirname } from 'path'; import { fileURLToPath } from 'url'; ${dirExpression};`,
+    ts: true,
+  },
+  {
+    code: `import { dirname } from 'path'; import type { fileURLToPath } from 'url'; ${dirExpression};`,
+    ts: true,
+  },
+];
+const dirInvalid = [];
+for (const prefix of ['', 'node:']) {
+  for (const [imports, expression] of [
+    [
+      `import { dirname } from '${prefix}path'; import { fileURLToPath } from '${prefix}url';`,
+      dirExpression,
+    ],
+    [
+      `import { dirname as d } from '${prefix}path'; import { fileURLToPath as f } from '${prefix}url';`,
+      'd(f(import.meta.url))',
+    ],
+    [
+      `import * as p from '${prefix}path'; import * as u from '${prefix}url';`,
+      'p.dirname(u.fileURLToPath(import.meta.url))',
+    ],
+    [
+      `import p from '${prefix}path'; import u from '${prefix}url';`,
+      "p['dirname'](u['fileURLToPath'](import.meta.url))",
+    ],
+    [
+      `const { dirname } = require('${prefix}path'); const { fileURLToPath } = require('${prefix}url');`,
+      dirExpression,
+    ],
+    [
+      `const p = require('${prefix}path'); const u = require('${prefix}url');`,
+      'p.dirname(u.fileURLToPath(import.meta.url))',
+    ],
+    ['', `require('${prefix}path').dirname(require('${prefix}url').fileURLToPath(import.meta.url))`],
+  ]) {
+    for (const ts of [false, true]) {
+      const code = `${imports}\nconst __dirname${ts ? ': string' : ''} = ${expression};\nlet directory; directory = ${expression};`;
+      const lines = code.split('\n');
+      dirInvalid.push({
+        code,
+        ts,
+        count: 2,
+        errors: [2, 3].map((line) => ({
+          message: 'Prefer import.meta.dir for the current module directory.',
+          line,
+          column: lines[line - 1].indexOf(expression) + 1,
+          endLine: line,
+          endColumn: lines[line - 1].indexOf(expression) + expression.length + 1,
+        })),
+      });
+    }
+  }
+}
+cases['prefer-import-meta-dir'] = {
+  valid: dirValid.flatMap((item) =>
+    typeof item === 'string' ? [{ code: item }, { code: item, ts: true }] : [item],
+  ),
+  invalid: dirInvalid,
+};
