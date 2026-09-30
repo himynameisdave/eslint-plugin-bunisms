@@ -489,8 +489,14 @@ const resolveValid = [
   "exports.path = require.resolve('some-package');",
   "require.resolve('some-package'); module['exports'] = {};",
   "if (require.main === module) require.resolve('some-package');",
+  "if (typeof exports === 'object') {} require.resolve('some-package');",
+  "Object.assign(module, {}); require.resolve('some-package');",
+  { code: "(require as any).resolve = custom; require.resolve('some-package');", ts: true },
+  { code: "require!.resolve = custom; require.resolve('some-package');", ts: true },
+  { code: "(<any>require).resolve = custom; require.resolve('some-package');", ts: true },
+  { code: "(require satisfies object).resolve = custom; require.resolve('some-package');", ts: true },
+  { code: "import fs = require('fs'); require.resolve('some-package');", ts: true },
   { code: "require.resolve('some-package');", sourceType: 'commonjs' },
-  { code: "require.resolve('some-package');", sourceType: 'script' },
   { code: "require.resolve('some-package');", filename: 'example.cjs' },
   { code: "require.resolve('some-package');", filename: 'example.cts', ts: true },
 ];
@@ -514,6 +520,8 @@ const resolveInvalid = [
   "function f(require) { require.resolve('ignored'); }\nrequire.resolve('reported');",
   "function f(require) { require.resolve = custom; }\nrequire.resolve('reported');",
   "function f(module, exports) { module.exports = exports.foo; }\nrequire.resolve('reported');",
+  { code: "require.resolve('some-package');", sourceType: 'script' },
+  { code: "import A = B.C; require.resolve('some-package');", ts: true },
 ];
 cases['prefer-import-meta-resolve'] = {
   valid: resolveValid.flatMap((item) => {
@@ -522,11 +530,12 @@ cases['prefer-import-meta-resolve'] = {
     }
     return [{ code: item }, { code: item, ts: true }];
   }),
-  invalid: resolveInvalid.flatMap((code) => {
+  invalid: resolveInvalid.flatMap((entry) => {
+    const item = typeof entry === 'string' ? { code: entry } : entry;
+    const { code } = item;
+    // Every require.resolve call with a string literal is reported, except the 'ignored' specifier.
     const errors = [
-      ...code.matchAll(
-        /require(?:\.resolve|\[['"]resolve['"]\])(?=\(['"](?:some-package|\.\/file.js|node:fs|fs|\/absolute\/file.js|a|b|reported)['"]\))/gu,
-      ),
+      ...code.matchAll(/require(?:\.resolve|\[['"]resolve['"]\])(?=\(['"](?!ignored)[^'"]+['"]\))/gu),
     ].map((match) => {
       const prefix = code.slice(0, match.index);
       const line = prefix.split('\n').length;
@@ -540,6 +549,7 @@ cases['prefer-import-meta-resolve'] = {
         suggestions: [],
       };
     });
-    return [false, true].map((ts) => ({ code, ts, count: errors.length, errors }));
+    const base = { ...item, count: errors.length, errors };
+    return item.ts ? [base] : [base, { ...base, ts: true }];
   }),
 };

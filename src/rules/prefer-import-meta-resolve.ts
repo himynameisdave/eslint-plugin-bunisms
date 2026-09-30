@@ -1,7 +1,15 @@
-import { propertyName, variableFor } from '../utils/imports.js';
+import { isGlobal, propertyName } from '../utils/imports.js';
 
 import type { Rule } from 'eslint';
 import type { Node, MemberExpression } from 'estree';
+
+// TypeScript wrappers that keep the runtime value, e.g. `(require as any)`.
+const typeWrappers = new Set([
+  'TSAsExpression',
+  'TSNonNullExpression',
+  'TSSatisfiesExpression',
+  'TSTypeAssertion',
+]);
 
 const rule: Rule.RuleModule = {
   meta: {
@@ -16,21 +24,34 @@ const rule: Rule.RuleModule = {
     },
   },
   create(context) {
-    if (context.sourceCode.ast.sourceType !== 'module' || /\.c(?:js|ts)$/iu.test(context.filename)) {
+    // Oxlint parses .js/.ts files without import/export as scripts, so only skip known CommonJS.
+    if (context.languageOptions.sourceType === 'commonjs' || /\.c[jt]s$/iu.test(context.filename)) {
       return {};
     }
     const candidates: MemberExpression[] = [];
     let excluded = false;
-    function global(node: Node, name: string): boolean {
-      return node.type === 'Identifier' && node.name === name && !variableFor(context, node)?.defs.length;
+    // Flat config defaults to ESM even for .js files using CommonJS, so any unshadowed
+    // module or exports reference (even `typeof exports`) marks the file as CommonJS.
+    function usesCommonJsGlobals(): boolean {
+      const scope = context.sourceCode.scopeManager.globalScope;
+      return ['module', 'exports'].some((name) => {
+        const variable = scope?.set.get(name);
+        return (
+          scope?.through.some((reference) => reference.identifier.name === name)
+          || (variable?.defs.length === 0 && variable.references.length > 0)
+        );
+      });
     }
     function checkWrite(target: Node): void {
       let node = target;
       // Ignore the whole file if require or any of its properties is visibly changed.
-      while (node.type === 'MemberExpression') {
-        node = node.object;
+      while (node.type === 'MemberExpression' || typeWrappers.has(node.type)) {
+        node =
+          node.type === 'MemberExpression'
+            ? node.object
+            : (node as unknown as { expression: Node }).expression;
       }
-      if (global(node, 'require')) {
+      if (isGlobal(context, node, 'require')) {
         excluded = true;
       }
       // Destructuring assignment can also replace the global require binding.
@@ -52,17 +73,21 @@ const rule: Rule.RuleModule = {
     }
     return {
       'MemberExpression'(node) {
-        // Flat config defaults to ESM even for .js files using CommonJS exports.
         if (
-          global(node.object, 'module')
-          || global(node.object, 'exports')
-          || (global(node.object, 'require') && propertyName(node.property, node.computed) === 'main')
+          isGlobal(context, node.object, 'require')
+          && propertyName(node.property, node.computed) === 'main'
         ) {
           excluded = true;
         }
       },
       'TSExportAssignment'() {
         excluded = true;
+      },
+      'TSImportEqualsDeclaration'(node: { moduleReference: { type: string } }) {
+        // `import x = require('y')` only compiles to CommonJS; `import x = A.B` is a namespace alias.
+        if (node.moduleReference.type === 'TSExternalModuleReference') {
+          excluded = true;
+        }
       },
       'AssignmentExpression'(node) {
         checkWrite(node.left);
@@ -88,7 +113,7 @@ const rule: Rule.RuleModule = {
           node.optional
           || callee.type !== 'MemberExpression'
           || callee.optional
-          || !global(callee.object, 'require')
+          || !isGlobal(context, callee.object, 'require')
           || propertyName(callee.property, callee.computed) !== 'resolve'
           || node.arguments.length !== 1
           || specifier?.type !== 'Literal'
@@ -101,7 +126,7 @@ const rule: Rule.RuleModule = {
         candidates.push(callee);
       },
       'Program:exit'() {
-        if (!excluded) {
+        if (!excluded && !usesCommonJsGlobals()) {
           for (const node of candidates) {
             context.report({ node, messageId: 'preferImportMetaResolve' });
           }

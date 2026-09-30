@@ -40,12 +40,16 @@ try {
   for (const file of files) {
     const result = Bun.spawnSync([process.execPath, file]);
     assert.equal(result.exitCode, 0, result.stderr.toString());
-    const actual = JSON.parse(result.stdout.toString());
+    const { url, ...actual } = JSON.parse(result.stdout.toString());
+    const escaped = pathToFileURL(join(directory, 'space # percent% unicode-é.js')).href;
+    // Bun 1.4.0–1.4.2 leaves # and % unescaped. Accept the fixed form too, and revisit
+    // the rule's conservative exclusion once supported Bun versions all escape them.
+    assert.ok(
+      [escaped, `${pathToFileURL(directory).href}/space%20#%20percent%%20unicode-%C3%A9.js`].includes(url),
+      url,
+    );
     assert.deepEqual(actual, {
       path: join(directory, 'space # percent% unicode-é.js'),
-      // Bun 1.4.0–1.4.2 leaves # and % unescaped.
-      // Revisit the rule's conservative exclusion when this runtime behavior changes.
-      url: `${pathToFileURL(directory).href}/space%20#%20percent%%20unicode-%C3%A9.js`,
       requireCondition: join(packageDirectory, 'cjs.cjs'),
       importCondition: pathToFileURL(join(packageDirectory, 'esm.js')).href,
       builtinPath: 'fs',

@@ -24,6 +24,7 @@ const rules = {
   'no-dotenv': noDotenv,
   'prefer-import-meta-resolve': preferImportMetaResolve,
 };
+const strictOnly = new Set(['prefer-bun-shell', 'prefer-import-meta-resolve']);
 type Preset = 'recommended' | 'strict' | 'all';
 const plugin: ESLint.Plugin & { rules: typeof rules; configs: Record<Preset, Linter.Config> } = {
   meta: { name: 'eslint-plugin-bunisms', version: packageJson.version },
@@ -31,9 +32,7 @@ const plugin: ESLint.Plugin & { rules: typeof rules; configs: Record<Preset, Lin
   configs: {} as Record<Preset, Linter.Config>,
 };
 for (const preset of ['recommended', 'strict', 'all'] as const) {
-  const presetRules = Object.keys(rules).filter(
-    (name) => !['prefer-bun-shell', 'prefer-import-meta-resolve'].includes(name) || preset !== 'recommended',
-  );
+  const presetRules = Object.keys(rules).filter((name) => preset !== 'recommended' || !strictOnly.has(name));
   plugin.configs[preset] = {
     name: `bun/${preset}`,
     plugins: { bun: plugin },

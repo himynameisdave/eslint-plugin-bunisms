@@ -63,7 +63,7 @@ ESLint needs [`jiti`](https://github.com/unjs/jiti) to load a TypeScript config 
 | [bun/prefer-import-meta-resolve](docs/rules/prefer-import-meta-resolve.md) | Consider ESM module resolution with `import.meta.resolve()` (strict and all) |
 | [bun/no-dotenv](docs/rules/no-dotenv.md)                                   | Avoid redundant standard dotenv initialization when targeting Bun            |
 
-Rules recognize imports, aliases and CommonJS bindings, respecting lexical scope. They report calls and entrypoint comparisons without automatically rewriting them. Review runtime compatibility and semantics before migrating.
+Rules recognize imports, aliases and CommonJS bindings, respecting lexical scope. The exception is `prefer-import-meta-resolve`, which only checks direct global `require.resolve()` calls and skips CommonJS files. They report calls and entrypoint comparisons without automatically rewriting them. Review runtime compatibility and semantics before migrating.
 
 The `recommended`, `strict` and `all` ESLint presets enable rules as warnings. `prefer-bun-shell` and `prefer-import-meta-resolve` are limited to `strict` and `all` because shell behavior, callback handling and module resolution semantics need deliberate migration. Override individual rules after the preset:
 

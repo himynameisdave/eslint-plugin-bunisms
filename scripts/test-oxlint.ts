@@ -29,11 +29,10 @@ try {
     },
   ][]) {
     for (const item of [...suite.valid, ...suite.invalid]) {
-      // Match RuleTester's default module parsing even without import/export syntax.
-      const defaultExtension = item.ts ? 'mts' : 'mjs';
-      const sourceExtension =
-        item.sourceType === 'commonjs' || item.sourceType === 'script' ? 'cjs' : defaultExtension;
-      const extension = item.filename?.split('.').at(-1) ?? sourceExtension;
+      // Plain .js/.ts, like real projects; Oxlint only knows CommonJS from the extension.
+      const extension =
+        item.filename?.split('.').at(-1)
+        ?? `${item.sourceType === 'commonjs' ? 'c' : ''}${item.ts ? 'ts' : 'js'}`;
       const file = join(directory, `case-${index++}.${extension}`);
       fixtureRules.set(file, `bun(${name})`);
       expected.set(file, 'count' in item ? Number(item.count) : 0);

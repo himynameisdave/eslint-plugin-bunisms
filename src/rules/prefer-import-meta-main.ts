@@ -1,4 +1,4 @@
-import { propertyName, variableFor } from '../utils/imports.js';
+import { isGlobal, propertyName } from '../utils/imports.js';
 
 import type { Rule } from 'eslint';
 import type { Node } from 'estree';
@@ -22,11 +22,12 @@ const rule: Rule.RuleModule = {
     },
   },
   create(context) {
-    function global(node: Node, name: string): boolean {
-      return node.type === 'Identifier' && node.name === name && !variableFor(context, node)?.defs.length;
-    }
     function pair(left: Node, right: Node): boolean {
-      if (member(left, 'main') && global(left.object, 'require') && global(right, 'module')) {
+      if (
+        member(left, 'main')
+        && isGlobal(context, left.object, 'require')
+        && isGlobal(context, right, 'module')
+      ) {
         return true;
       }
       return (
@@ -35,7 +36,7 @@ const rule: Rule.RuleModule = {
         && left.object.meta.name === 'import'
         && left.object.property.name === 'meta'
         && member(right, 'main')
-        && global(right.object, 'Bun')
+        && isGlobal(context, right.object, 'Bun')
       );
     }
     return {
