@@ -4,7 +4,7 @@
 
 ⚠️ This rule _warns_ in the following [configs](https://github.com/himynameisdave/eslint-plugin-bunisms#eslint): 🔒 `strict`, 🌐 `all`.
 
-[Bun Shell](https://bun.sh/docs/runtime/shell) provides a cross-platform shell API using the `$` tagged template literal. Interpolated values are escaped by default. It is available in the project's supported Bun baseline, Bun >=1.4.0.
+[Bun Shell](https://bun.sh/docs/runtime/shell) provides a cross-platform shell API using the `$` tagged template literal. Interpolated values are escaped by default.
 
 This rule reports `exec()` and `execSync()` from `child_process`, including named, aliased, default and namespace imports and supported CommonJS bindings. Bare and `node:` module specifiers are recognized. It does not report `spawn()`, `spawnSync()`, `execFile()` or unrelated functions. Shadowed bindings, type-only imports and visible mutations are excluded. Only direct calls report; passing `exec` to `promisify()` or another function does not.
 
