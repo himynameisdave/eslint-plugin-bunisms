@@ -1,13 +1,13 @@
 import { propertyName, resolveBuiltin } from '../utils/imports.js';
 
 import type { Rule } from 'eslint';
-import type { CallExpression, Expression, Node } from 'estree';
+import type { CallExpression, MemberExpression, Node } from 'estree';
 
+// Only algorithms and update encodings that give the same digest on Node and Bun:
+// Node rejects blake2b256 and md4, and Bun hashes 'utf-16le' input differently.
 const algorithms = new Set([
-  'blake2b256',
   'blake2b512',
   'blake2s256',
-  'md4',
   'md5',
   'ripemd160',
   'sha1',
@@ -32,20 +32,21 @@ const encodings = new Set([
   'ucs2',
   'ucs-2',
   'utf8',
+  // oxlint-disable-next-line unicorn/text-encoding-identifier-case -- Node code uses both spellings.
+  'utf-8',
   'utf16le',
 ]);
 const digestEncodings = new Set(['base64', 'base64url', 'hex']);
 
-function isCall(node: Node): node is CallExpression {
-  return node.type === 'CallExpression';
-}
+type MemberCall = CallExpression & { callee: MemberExpression };
 
-function memberCall(node: Expression, method: string): CallExpression | undefined {
-  if (node.type !== 'CallExpression' || node.optional || node.callee.type !== 'MemberExpression') {
-    return;
-  }
-  if (propertyName(node.callee.property, node.callee.computed) === method) {
-    return node;
+function memberCall(node: Node, method: string): MemberCall | undefined {
+  if (
+    node.type === 'CallExpression'
+    && node.callee.type === 'MemberExpression'
+    && propertyName(node.callee.property, node.callee.computed) === method
+  ) {
+    return node as MemberCall;
   }
 }
 
@@ -61,41 +62,29 @@ function isSupportedUpdate(call: CallExpression): boolean {
   return data?.type !== 'SpreadElement' && (!encoding || isStringIn(encoding, encodings));
 }
 
-function isSupportedCreateHash(context: Rule.RuleContext, call: CallExpression): boolean {
-  if (call.arguments.length !== 1 || call.arguments[0]?.type === 'SpreadElement') {
+function isSupportedCreateHash(context: Rule.RuleContext, node: Node): boolean {
+  if (
+    node.type !== 'CallExpression'
+    || node.arguments.length !== 1
+    || !isStringIn(node.arguments[0], algorithms)
+  ) {
     return false;
   }
-  const reference = resolveBuiltin(context, call.callee);
-  return Boolean(
-    reference
-    && reference.module === 'crypto'
-    && reference.path.length === 1
-    && reference.path[0] === 'createHash'
-    && isStringIn(call.arguments[0], algorithms),
-  );
+  const reference = resolveBuiltin(context, node.callee);
+  return reference?.module === 'crypto' && reference.path.join('.') === 'createHash';
 }
 
-function isCryptoHashChain(context: Rule.RuleContext, digest: CallExpression): boolean {
-  // Node returns a Buffer when digest() has no encoding, while CryptoHasher returns a Uint8Array.
-  if (digest.arguments.length !== 1 || !isStringIn(digest.arguments[0], digestEncodings)) {
+function isCryptoHashChain(context: Rule.RuleContext, digest: MemberCall): boolean {
+  const [encoding] = digest.arguments;
+  if (digest.arguments.length > 1 || (encoding && !isStringIn(encoding, digestEncodings))) {
     return false;
   }
-  let current: Node = digest.callee.type === 'MemberExpression' ? digest.callee.object : digest;
-  let updateCount = 0;
-  while (isCall(current)) {
-    const update = memberCall(current, 'update');
-    if (!update || !isSupportedUpdate(update)) {
-      return false;
+  let update = memberCall(digest.callee.object, 'update');
+  while (update && isSupportedUpdate(update)) {
+    if (isSupportedCreateHash(context, update.callee.object)) {
+      return true;
     }
-    updateCount++;
-    const target = update.callee.type === 'MemberExpression' ? update.callee.object : undefined;
-    if (!target || !isCall(target)) {
-      return false;
-    }
-    if (isSupportedCreateHash(context, target)) {
-      return updateCount > 0;
-    }
-    current = target;
+    update = memberCall(update.callee.object, 'update');
   }
   return false;
 }
@@ -115,7 +104,8 @@ const rule: Rule.RuleModule = {
   create(context) {
     return {
       CallExpression(node) {
-        if (memberCall(node, 'digest') && isCryptoHashChain(context, node)) {
+        const digest = memberCall(node, 'digest');
+        if (digest && isCryptoHashChain(context, digest)) {
           context.report({ node, messageId: 'preferBunCryptoHasher' });
         }
       },

@@ -14,11 +14,6 @@ export function runRuleTests(RuleTester, plugin) {
   const tester = new RuleTester({ languageOptions: { ecmaVersion: 2022, sourceType: 'module' } });
   for (const [name, suite] of Object.entries(cases)) {
     const errorsFor = (item) => {
-      if (name === 'prefer-bun-crypto-hasher') {
-        return (
-          item.errors ?? Array.from({ length: item.count }, () => ({ messageId: 'preferBunCryptoHasher' }))
-        );
-      }
       if (name === 'prefer-import-meta-path') {
         return [...item.code.matchAll(/(?:require\('[^']+'\)\.)?[\w$.]+\(import\.meta\.url\)/gu)].map(
           (match) => ({
@@ -30,11 +25,9 @@ export function runRuleTests(RuleTester, plugin) {
           }),
         );
       }
+      const [messageId] = Object.keys(plugin.rules[name].meta.messages);
       return (
-        item.errors
-        ?? Array.from({ length: item.count }, () => ({
-          messageId: item.messageId ?? (name === 'no-dotenv' ? 'noDotenv' : 'preferBun'),
-        }))
+        item.errors ?? Array.from({ length: item.count }, () => ({ messageId: item.messageId ?? messageId }))
       );
     };
     tester.run(name, plugin.rules[name], {

@@ -70,21 +70,24 @@ it does not publish or combine the planned releases.
 ## prefer-bun-crypto-hasher validation
 
 September 29, 2026: the rule recognizes direct `crypto.createHash()` calls with
-a documented literal algorithm, one or more chained `.update()` calls, and an
-explicit `hex`, `base64`, or `base64url` digest encoding. It excludes HMAC, XOF
-algorithms, dynamic or unsupported algorithms, mutable/shadowed bindings,
-stored hash instances, other digest encodings, and `digest()` without an
-encoding (Node returns a `Buffer`; Bun returns a `Uint8Array`). It provides no
-fix or suggestion. See the rule documentation for the full report boundary.
+a literal algorithm, one or more chained `.update()` calls, and either no
+digest encoding or `hex`, `base64` or `base64url` (both runtimes return a
+`Buffer` without one). It excludes HMAC, XOF algorithms, dynamic or unsupported
+algorithms, mutable/shadowed bindings, stored hash instances and other digest
+encodings. It provides no fix or suggestion. See the rule documentation for the
+full report boundary.
 
 - Official [Bun hashing docs](https://bun.sh/docs/runtime/hashing#buncryptohasher)
   document the supported algorithms, incremental updates and encodings; they
   identify `Bun.hash` as non-cryptographic. Bun's
   [Node `Hash.update()` reference](https://bun.sh/reference/node/crypto/Hash/update)
-  documents compatible streaming input. Runtime comparisons on Bun 1.4.2
-  matched Node `createHash` output for SHA-256, SHA3-256 and BLAKE2b-256, with
-  multiple updates and each of the three supported digest encodings.
-- 480 shared JS/TS fixtures pass under ESLint 9.39.5 and 10.11.0 on Node 22,
+  documents compatible streaming input. `Bun.CryptoHasher` on Bun 1.4.2
+  matched digests recorded from real Node 22.22.2 for SHA-256 and SHA3-256,
+  with multiple updates and each of the three supported digest encodings.
+  (`bun test` swaps `node:crypto` for Bun's own, so the test uses recorded
+  Node output.) Real Node rejects `blake2b256` and `md4`, and Bun hashes
+  `'utf-16le'` update input differently, so the rule skips them.
+- 573 shared JS/TS fixtures pass under ESLint 9.39.5 and 10.11.0 on Node 22,
   and through Oxlint 1.85.0. They cover import forms, CommonJS, shadowing,
   HMAC exclusion, incompatible options/encodings, multiple reports and exact
   diagnostic location. Clean packed-package checks pass with ESLint 9, ESLint
