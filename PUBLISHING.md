@@ -1,6 +1,6 @@
 # Publishing to npm
 
-Run releases from **Actions → Release → Run workflow** on `main`, then choose a patch, minor, or major bump according to the [versioning guide](VERSIONING.md). The workflow runs all checks, bumps the version in `package.json`, rebuilds the package with that version, publishes to npm with trusted publishing (OIDC), pushes a bare numeric version tag (for example `0.2.0`), and creates a GitHub release. No `v` prefix is used for tags or GitHub release names.
+Run releases from **Actions → Release → Run workflow** on `main`, then choose a patch, minor, or major bump according to the [versioning guide](VERSIONING.md). The workflow runs all checks, bumps the version in `package.json`, rebuilds the package with that version, pushes the version commit and a bare numeric version tag (for example `0.2.0`), publishes to npm with trusted publishing (OIDC), and creates a GitHub release. No `v` prefix is used for tags or GitHub release names.
 
 ## One-time setup: first npm publish
 
@@ -32,11 +32,14 @@ The workflow pushes the version commit and tag to `main`. If branch protection p
 2. In GitHub, open **Actions → Release → Run workflow**, keep the branch set to `main`, and choose `patch`, `minor`, or `major`.
 3. Review the run and the generated GitHub release. The workflow tags the commit with the bare version, such as `0.2.0`.
 
-The workflow runs `bun run check` before changing versions. It then updates `package.json`, commits that change, creates the matching numeric tag, and rebuilds `dist/` so the plugin metadata contains the bumped version. `npm publish` runs only after the checks pass. The push and GitHub release happen after publishing.
+The workflow runs `bun run check` before changing versions. It then updates `package.json`, commits that change, creates the matching numeric tag, and rebuilds `dist/` so the plugin metadata contains the bumped version. `npm publish` runs only after the checks pass. The commit and tag are pushed before publishing, so a rejected push leaves npm untouched and the workflow can be rerun once the push is fixed. The GitHub release is created last.
 
-## If a run fails after publishing
+## If a run fails after pushing
 
-npm releases cannot be overwritten. If npm publish succeeded but a later push or GitHub release step failed, do not rerun the workflow: it would bump the version again. Recover manually by committing the published version in `package.json`, rebuilding `dist/`, tagging that commit with the exact bare version, pushing the commit and tag, then creating the GitHub release for that tag.
+If the push succeeded but npm publish or the GitHub release failed, do not rerun the workflow: it would bump the version again. Recover manually from the pushed tag:
+
+- npm publish failed: check out the tag, run `bun install --frozen-lockfile` and `bun run build`, then `npm publish --access public` with your npm account.
+- GitHub release failed: run `gh release create <version> --verify-tag --generate-notes`.
 
 ## Manual fallback
 
