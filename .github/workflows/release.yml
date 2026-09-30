@@ -76,13 +76,14 @@ jobs:
           bun run build
           node --input-type=module -e 'import plugin from "./dist/index.js"; import pkg from "./package.json" with { type: "json" }; if (plugin.meta.version !== pkg.version) throw new Error(`Built plugin version ${plugin.meta.version} does not match package version ${pkg.version}`)'
 
+      # Push before publishing: a rejected push must not leave npm ahead of main.
+      - name: Push release commit and tag
+        id: push
+        run: git push --atomic origin main "$VERSION"
+
       # Release gates ran above; dist/ has now been rebuilt for the bumped version.
       - name: Publish to npm
-        id: publish
         run: npm publish --ignore-scripts --access public
-
-      - name: Push release commit and tag
-        run: git push --atomic origin main "$VERSION"
 
       - name: Create GitHub release
         env:
@@ -90,6 +91,6 @@ jobs:
         run: gh release create "$VERSION" --verify-tag --generate-notes
 
       - name: Explain a partial release
-        if: failure() && steps.publish.outcome == 'success'
+        if: failure() && steps.push.outcome == 'success'
         run: |
-          echo "::error::$VERSION is live on npm but a later step failed. Do not rerun this workflow; recover manually using PUBLISHING.md."
+          echo "::error::$VERSION is pushed to main but a later step failed. Do not rerun this workflow; recover manually using PUBLISHING.md."
