@@ -4,7 +4,7 @@ import type { Node, Expression, Identifier } from 'estree';
 type BoundNode = Node & { parent?: BoundNode };
 export type BuiltinReference = { module: string; path: string[] };
 
-function variableFor(context: Rule.RuleContext, node: Identifier): Scope.Variable | undefined {
+export function variableFor(context: Rule.RuleContext, node: Identifier): Scope.Variable | undefined {
   let scope: Scope.Scope | null = context.sourceCode.getScope(node);
   while (scope) {
     const variable = scope.set.get(node.name);
@@ -15,7 +15,7 @@ function variableFor(context: Rule.RuleContext, node: Identifier): Scope.Variabl
   }
 }
 
-function propertyName(node: Node, computed: boolean): string | undefined {
+export function propertyName(node: Node, computed: boolean): string | undefined {
   if (!computed && node.type === 'Identifier') {
     return node.name;
   }

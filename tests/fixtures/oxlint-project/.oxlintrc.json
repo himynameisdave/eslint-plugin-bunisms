@@ -6,6 +6,7 @@
     "bun/prefer-bun-file": "warn",
     "bun/prefer-bun-write": "warn",
     "bun/prefer-bun-spawn": "warn",
-    "bun/prefer-import-meta-path": "warn"
+    "bun/prefer-import-meta-path": "warn",
+    "bun/prefer-import-meta-main": "warn"
   }
 }

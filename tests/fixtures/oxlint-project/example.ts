@@ -14,3 +14,4 @@ function shadow(read: () => void): void {
 import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
+if (import.meta.path === Bun.main) console.log('entrypoint');

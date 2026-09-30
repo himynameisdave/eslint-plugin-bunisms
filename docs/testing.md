@@ -37,3 +37,32 @@ Runtime tests passed on Bun 1.4.0 and 1.4.2 on macOS arm64, including spaces, re
 Read-only review of [Elysia at e037eca](https://github.com/elysiajs/elysia/tree/e037eca710e7ad193be09cc6615ab0dbe54af914) (238 files) and [Bun packages at 9f70da0](https://github.com/oven-sh/bun/tree/9f70da074192e55c3ec68aef7fd982e6b4b0284b/packages) (86 files) found no diagnostics from this rule and no parse errors. This sample establishes no observed false positives; it does not provide a real-project positive match.
 
 Issue #2 targets 0.3.0 and requires one new rule per minor release. This implementation does not publish or bump the package: release sequencing and dogfooding before the next rule remain release gates.
+
+## prefer-import-meta-main validation
+
+Issue #3 implementation, September 28, 2026; planned for its own 0.4.0 minor
+release after the preceding releases. The package version is unchanged by this PR;
+it does not publish or combine the planned releases.
+
+- Official semantics and migration caveats are recorded in the
+  [rule documentation](rules/prefer-import-meta-main.md).
+- `bun run test:entrypoint` passes on Bun 1.4.0 and 1.4.2 for direct/imported
+  JS, TS, ESM and CommonJS modules, including both directions and polarities.
+- 112 new shared fixtures cover JS/TS, equality/inequality, computed properties,
+  both directions, multiple reports, lexical shadowing, unrelated imports,
+  aliases, optional chains and non-comparison expressions. RuleTester asserts
+  comparison locations and absence of fixes/suggestions; the suite includes
+  explicit CommonJS parsing. Oxlint runs the same source fixtures.
+- Read-only dogfood of the built recommended preset covered 687 files:
+  [Elysia](https://github.com/elysiajs/elysia/tree/e037eca710e7ad193be09cc6615ab0dbe54af914)
+  (238 files) and
+  [Hono](https://github.com/honojs/hono/tree/18331a905e2415f7f73038357f2eec354123f7a6)
+  (449 files). No parse failures or entrypoint-rule findings. Hono had five
+  findings from existing rules. No false positives from the new rule appeared,
+  but this sample contains no positive entrypoint finding; fixtures and runtime
+  tests supply positive coverage.
+- Final linter checks passed with ESLint 9.39.5 and 10.11.0 under Node 22.22.2
+  (365 rule cases plus three preset checks per major), and Oxlint 1.85.0
+  (365 shared fixtures). Clean npm tarball integration passed with both ESLint
+  majors and Oxlint on JS/TS, including ten expected fixture diagnostics.
+  Type checking, linting and formatting checks also passed.

@@ -29,6 +29,7 @@ export default defineConfig({
     'bun/prefer-bun-spawn': 'warn',
     'bun/prefer-import-meta-path': 'warn',
     'bun/prefer-import-meta-dir': 'warn',
+    'bun/prefer-import-meta-main': 'warn',
   },
 });
 ```
@@ -55,10 +56,12 @@ ESLint needs [`jiti`](https://github.com/unjs/jiti) to load a TypeScript config 
 | [bun/prefer-bun-spawn](docs/rules/prefer-bun-spawn.md)               | `Bun.spawn()` / `Bun.spawnSync()` instead of Node's subprocess equivalents |
 | [bun/prefer-import-meta-path](docs/rules/prefer-import-meta-path.md) | `import.meta.path` instead of `fileURLToPath(import.meta.url)`             |
 | [bun/prefer-import-meta-dir](docs/rules/prefer-import-meta-dir.md)   | `import.meta.dir` instead of `dirname(fileURLToPath(import.meta.url))`     |
+| [bun/prefer-import-meta-main](docs/rules/prefer-import-meta-main.md) | `import.meta.main` instead of entrypoint comparisons                       |
 
-Rules recognize imports, aliases and CommonJS bindings, respecting lexical scope. They report calls without automatically rewriting them: Node and Bun APIs have different options and return values.
+Rules recognize imports, aliases and CommonJS bindings, respecting lexical scope. They report calls and entrypoint comparisons without automatically rewriting them. Review runtime compatibility and semantics before migrating.
 
-The `recommended`, `strict` and `all` ESLint presets currently enable all five rules as warnings. Override individual rules after the preset:
+The `recommended`, `strict` and `all` ESLint presets currently enable all six rules as warnings. Override individual rules after the preset:
+The `recommended`, `strict` and `all` ESLint presets currently enable all four rules as warnings. Override individual rules after the preset:
 
 ```ts
 export default [bun.configs.recommended, { rules: { 'bun/prefer-bun-file': 'error' } }];
