@@ -42,7 +42,7 @@ try {
     'node',
     '--input-type=module',
     '-e',
-    "import plugin from 'eslint-plugin-bunisms'; if(Object.keys(plugin.rules).length !== 12 || plugin.configs.strict.rules['bun/prefer-fetch'] !== 'warn' || plugin.configs.recommended.rules['bun/prefer-fetch'] !== undefined) process.exit(1)",
+    "import plugin from 'eslint-plugin-bunisms'; if(Object.keys(plugin.rules).length !== 13 || plugin.configs.strict.rules['bun/prefer-fetch'] !== 'warn' || plugin.configs.recommended.rules['bun/prefer-fetch'] !== undefined) process.exit(1)",
   ]);
   const pkg = JSON.parse(await readFile(join(root, 'package.json'), 'utf8'));
   // Install real consumers only after proving the package works without ESLint.
@@ -134,7 +134,7 @@ export default [bun.configs.strict, { files: ['**/*.ts'], languageOptions: { par
   for (const diagnostic of oxlintOutput.diagnostics) {
     assert.match(
       diagnostic.code,
-      /^bun\((?:no-(?:dotenv|late-module-mock)|prefer-(?:bun-(?:crypto-hasher|file|write|spawn|shell)|import-meta-(?:path|dir|main|resolve)))\)$/u,
+      /^bun\((?:no-(?:dotenv|late-module-mock)|prefer-(?:mock-restore-in-after-each|bun-(?:crypto-hasher|file|write|spawn|shell)|import-meta-(?:path|dir|main|resolve)))\)$/u,
     );
   }
   run([
