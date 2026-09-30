@@ -1,38 +1,42 @@
-import { resolveBuiltin, variableFor } from '../utils/imports.js';
+import { isGlobal, resolveBuiltin } from '../utils/imports.js';
 
 import type { Rule } from 'eslint';
 import type { CallExpression, Node } from 'estree';
 
 type ParentNode = Node & { parent?: ParentNode };
 
-function bunTestCall(context: Rule.RuleContext, node: CallExpression['callee'], name: string): boolean {
+// Bun's test globals include describe and afterEach, but not spyOn or mock.
+const globals = new Set(['describe', 'afterEach']);
+
+function bunTestCall(context: Rule.RuleContext, node: Node, name: string): boolean {
   const reference = resolveBuiltin(context, node);
   if (reference) {
     return reference.module === 'bun:test' && reference.path.join('.') === name;
   }
-  // Bun exposes these APIs as globals. Locally declared or imported names are never assumed global.
-  const variable = node.type === 'Identifier' ? variableFor(context, node) : undefined;
-  return node.type === 'Identifier' && node.name === name && (!variable || variable.defs.length === 0);
+  return globals.has(name) && isGlobal(context, node, name);
+}
+
+// Unwrap modifiers such as describe.only(), describe.each(table)() and describe.if(condition)().
+function isDescribe(context: Rule.RuleContext, node: Node): boolean {
+  if (bunTestCall(context, node, 'describe')) {
+    return true;
+  }
+  if (node.type === 'CallExpression') {
+    return isDescribe(context, node.callee);
+  }
+  return node.type === 'MemberExpression' && isDescribe(context, node.object);
 }
 
 function describeScopes(context: Rule.RuleContext, node: ParentNode): Node[] {
   const scopes: Node[] = [];
   let current: ParentNode | undefined = node;
   while (current) {
-    if (current.type === 'CallExpression' && bunTestCall(context, current.callee, 'describe')) {
+    if (current.type === 'CallExpression' && isDescribe(context, current.callee)) {
       scopes.unshift(current);
     }
     current = current.parent;
   }
   return scopes;
-}
-
-function restoresMocks(context: Rule.RuleContext, node: Node): boolean {
-  if (node.type !== 'CallExpression' || node.callee.type !== 'MemberExpression') {
-    return false;
-  }
-  const reference = resolveBuiltin(context, node.callee);
-  return reference?.module === 'bun:test' && reference.path.join('.') === 'mock.restore';
 }
 
 export default {
@@ -55,47 +59,26 @@ export default {
         if (bunTestCall(context, node.callee, 'spyOn')) {
           spies.push(node);
         }
-        if (!bunTestCall(context, node.callee, 'afterEach')) {
+        if (!bunTestCall(context, node.callee, 'mock.restore')) {
           return;
         }
-        const [callback] = node.arguments;
-        if (
-          !callback
-          || (callback.type !== 'ArrowFunctionExpression' && callback.type !== 'FunctionExpression')
+        // Only a restore made directly in the afterEach callback counts, not one in a nested function.
+        let callback = (node as ParentNode).parent;
+        while (
+          callback
+          && callback.type !== 'ArrowFunctionExpression'
+          && callback.type !== 'FunctionExpression'
+          && callback.type !== 'FunctionDeclaration'
         ) {
-          return;
+          callback = callback.parent;
         }
-        let restores = false;
-        const visit = (candidate: Node): void => {
-          if (
-            candidate !== callback.body
-            && (candidate.type === 'ArrowFunctionExpression'
-              || candidate.type === 'FunctionExpression'
-              || candidate.type === 'FunctionDeclaration')
-          ) {
-            return;
-          }
-          if (restoresMocks(context, candidate)) {
-            restores = true;
-          }
-          for (const [key, value] of Object.entries(candidate)) {
-            if (key === 'parent') {
-              continue;
-            }
-            if (Array.isArray(value)) {
-              for (const child of value) {
-                if (child && typeof child === 'object' && 'type' in child) {
-                  visit(child as Node);
-                }
-              }
-            } else if (value && typeof value === 'object' && 'type' in value) {
-              visit(value as Node);
-            }
-          }
-        };
-        visit(callback.body);
-        if (restores) {
-          cleanupScopes.push(describeScopes(context, node as ParentNode));
+        const hook = callback?.parent;
+        if (
+          hook?.type === 'CallExpression'
+          && hook.arguments[0] === callback
+          && bunTestCall(context, hook.callee, 'afterEach')
+        ) {
+          cleanupScopes.push(describeScopes(context, hook));
         }
       },
       'Program:exit'() {
