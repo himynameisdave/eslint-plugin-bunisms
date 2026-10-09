@@ -6,7 +6,7 @@
       "name": "eslint-plugin-bunisms",
       "devDependencies": {
         "@himynameisdave/oxfmt-config": "^1.0.0",
-        "@himynameisdave/oxlint-config": "^1.2.0",
+        "@himynameisdave/oxlint-config": "^2.1.0",
         "@types/bun": "^1.4.2",
         "@types/estree": "^1.0.9",
         "@typescript-eslint/parser": "^8.70.1",
@@ -49,7 +49,7 @@
 
     "@himynameisdave/oxfmt-config": ["@himynameisdave/oxfmt-config@1.0.0", "", { "peerDependencies": { "oxfmt": ">=0.65.0 <1" } }, "sha512-xHhR+QEJwZ8GZ4u+tSimQBXO5syiv90fw0y0WTFuIcLTNOrmEfCc3ZOdvUdw6nu9sEbTZ60J4bDp/G56RQ087Q=="],
 
-    "@himynameisdave/oxlint-config": ["@himynameisdave/oxlint-config@1.2.0", "", { "peerDependencies": { "oxlint": ">=1.78.0 <2", "oxlint-tsgolint": ">=7.0.2001" }, "optionalPeers": ["oxlint-tsgolint"] }, "sha512-QG7wb0jcmjUx4bSsYQ1XwPP9qQcvNHC9jjJ/Ix8yuz08OW9WhAQNcU0JrOXAy7nFhPGHDjSdBL3AGTXAAxG5ug=="],
+    "@himynameisdave/oxlint-config": ["@himynameisdave/oxlint-config@2.1.0", "", { "dependencies": { "eslint-plugin-bunisms": "0.10.0" }, "peerDependencies": { "oxlint": ">=1.85.0 <2", "oxlint-tsgolint": ">=7.0.2001" }, "optionalPeers": ["oxlint-tsgolint"] }, "sha512-J0PewtxUivvwo3lVS78T1kJSbHIHOobK/PTFq7Pruir2VwnYqZfOKwbopvRNevokIkUVdrmz0CRIArehIVsTzw=="],
 
     "@humanfs/core": ["@humanfs/core@0.19.2", "", { "dependencies": { "@humanfs/types": "^0.15.0" } }, "sha512-UhXNm+CFMWcbChXywFwkmhqjs3PRCmcSa/hfBgLIb7oQ5HNb1wS0icWsGtSAUNgefHeI+eBrA8I1fxmbHsGdvA=="],
 
@@ -202,6 +202,8 @@
     "escape-string-regexp": ["escape-string-regexp@4.0.0", "", {}, "sha512-TtpcNJ3XAzx3Gq8sWRzJaVajRs0uVxA2YAkdb1jm2YkPz4G6egUFAyA3n5vtEIZefPk5Wa4UXbKuS5fKkJWdgA=="],
 
     "eslint": ["eslint@9.39.5", "", { "dependencies": { "@eslint-community/eslint-utils": "^4.8.0", "@eslint-community/regexpp": "^4.12.1", "@eslint/config-array": "^0.21.2", "@eslint/config-helpers": "^0.4.2", "@eslint/core": "^0.17.0", "@eslint/eslintrc": "^3.3.6", "@eslint/js": "9.39.5", "@eslint/plugin-kit": "^0.4.1", "@humanfs/node": "^0.16.6", "@humanwhocodes/module-importer": "^1.0.1", "@humanwhocodes/retry": "^0.4.2", "@types/estree": "^1.0.6", "ajv": "^6.14.0", "chalk": "^4.0.0", "cross-spawn": "^7.0.6", "debug": "^4.3.2", "escape-string-regexp": "^4.0.0", "eslint-scope": "^8.4.0", "eslint-visitor-keys": "^4.2.1", "espree": "^10.4.0", "esquery": "^1.5.0", "esutils": "^2.0.2", "fast-deep-equal": "^3.1.3", "file-entry-cache": "^8.0.0", "find-up": "^5.0.0", "glob-parent": "^6.0.2", "ignore": "^5.2.0", "imurmurhash": "^0.1.4", "is-glob": "^4.0.0", "json-stable-stringify-without-jsonify": "^1.0.1", "lodash.merge": "^4.6.2", "minimatch": "^3.1.5", "natural-compare": "^1.4.0", "optionator": "^0.9.3" }, "peerDependencies": { "jiti": "*" }, "optionalPeers": ["jiti"], "bin": { "eslint": "bin/eslint.js" } }, "sha512-DgZS62aPLXKlnxILS/AYCoRvHaZeXceIzlXPkkGGzJWSow1aEk0lbTlxUSlyjC8jcaKxAdOnTDz+o1JFSBsyjw=="],
+
+    "eslint-plugin-bunisms": ["eslint-plugin-bunisms@0.10.0", "", { "peerDependencies": { "eslint": ">=9.0.0 <11" }, "optionalPeers": ["eslint"] }, "sha512-duyNkTo/etaTLIrHWDxAheNZ2w3N5Ivy21+5wXjj5KkmI9jafyT+R+UehczB7YeGzMsRaHy5A4cPGtlRWqPgBw=="],
 
     "eslint-scope": ["eslint-scope@8.4.0", "", { "dependencies": { "esrecurse": "^4.3.0", "estraverse": "^5.2.0" } }, "sha512-sNXOfKCn74rt8RICKMvJS7XKV/Xk9kA7DyJr8mJik3S7Cwgy3qlkkmyS2uQB3jiJg6VNdZd/pDBJu0nvG2NlTg=="],
 
