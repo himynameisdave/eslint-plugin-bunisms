@@ -53,7 +53,7 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "@himynameisdave/oxfmt-config": "^1.0.0",
+    "@himynameisdave/oxfmt-config": "^1.1.0",
     "@himynameisdave/oxlint-config": "^2.2.0",
     "@types/bun": "^1.4.2",
     "@types/estree": "^1.0.9",
