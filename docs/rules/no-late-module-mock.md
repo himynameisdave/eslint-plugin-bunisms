@@ -12,6 +12,7 @@ There is no autofix or suggestion: moving imports can change evaluation order, a
 
 ## Examples
 
+<!-- prettier-ignore -->
 ```ts
 // ❌ Original side effects can run before this mock.
 import { foo } from './foo';
@@ -24,6 +25,7 @@ mock.module('./foo', () => ({ foo: replacement }));
 const { foo } = await import('./foo');
 ```
 
+<!-- prettier-ignore -->
 ```ts
 // ✅ A different module is mocked.
 import { foo } from './foo';

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -16,7 +16,7 @@ try {
       import.meta.path !== Bun.main, Bun.main != import.meta.path
     ])); ${extension === 'cjs' ? 'module.exports = {};' : ''}`;
     // oxlint-disable-next-line no-await-in-loop -- Each extension is verified in separate processes.
-    await writeFile(file, source);
+    await Bun.write(file, source);
     for (const direct of [true, false]) {
       const args = direct ? [file] : ['-e', `await import(${JSON.stringify(file)})`];
       const result = Bun.spawnSync([process.execPath, ...args]);

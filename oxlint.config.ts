@@ -1,8 +1,9 @@
 import base from '@himynameisdave/oxlint-config/base';
+import bun from '@himynameisdave/oxlint-config/bun';
 import { defineConfig } from 'oxlint';
 
 export default defineConfig({
-  extends: [base],
+  extends: [base, bun],
   overrides: [
     {
       files: ['scripts/**/*.ts'],
