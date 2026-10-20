@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { cp, mkdtemp, writeFile, readFile, access, rm } from 'node:fs/promises';
+import { cp, mkdtemp, access, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 const directory = await mkdtemp(join(tmpdir(), 'bunisms-package-'));
@@ -24,7 +24,7 @@ try {
     files.includes('dist/index.js') && files.includes('dist/index.d.ts') && files.includes('LICENSE'),
   );
   assert.ok(!files.some((file: string) => /^(?:src|tests|scripts)\//u.test(file)));
-  await writeFile(join(directory, 'package.json'), JSON.stringify({ private: true, type: 'module' }));
+  await Bun.write(join(directory, 'package.json'), JSON.stringify({ private: true, type: 'module' }));
   run([
     'npm',
     'install',
@@ -44,7 +44,7 @@ try {
     '-e',
     "import plugin from 'eslint-plugin-bunisms'; if(Object.keys(plugin.rules).length !== 12 || plugin.configs.strict.rules['bun/prefer-fetch'] !== 'warn' || plugin.configs.recommended.rules['bun/prefer-fetch'] !== undefined) process.exit(1)",
   ]);
-  const pkg = JSON.parse(await readFile(join(root, 'package.json'), 'utf8'));
+  const pkg = await Bun.file(join(root, 'package.json')).json();
   // Install real consumers only after proving the package works without ESLint.
   run([
     'npm',
@@ -86,7 +86,7 @@ try {
     ]);
   }
   assert.equal(eslintOutput.length, 2);
-  await writeFile(
+  await Bun.write(
     join(directory, 'eslint-project/strict.config.mjs'),
     `import parser from '@typescript-eslint/parser';
 import bun from 'eslint-plugin-bunisms';
@@ -157,7 +157,7 @@ for (const extension of ['js', 'ts']) {
   assert.deepEqual(result.messages.map(message => message.ruleId), ['bun/no-late-module-mock']);
 }`,
   ]);
-  await writeFile(
+  await Bun.write(
     join(directory, 'consumer.mts'),
     `import bun from "eslint-plugin-bunisms";
 import type { Linter } from "eslint";

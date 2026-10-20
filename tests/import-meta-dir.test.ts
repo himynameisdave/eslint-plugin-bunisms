@@ -1,5 +1,5 @@
 import { test, expect } from 'bun:test';
-import { mkdtemp, mkdir, writeFile, symlink, rm, realpath } from 'node:fs/promises';
+import { mkdtemp, mkdir, symlink, rm, realpath } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -14,7 +14,7 @@ if (dirname(fileURLToPath(import.meta.url)) !== import.meta.dir) throw new Error
 console.log(import.meta.dir);`;
     const expectedDirectory = await realpath(directory);
     const file = join(directory, 'module.mjs');
-    await writeFile(file, source);
+    await Bun.write(file, source);
     const link = join(root, 'linked.mjs');
     await symlink(file, link);
     for (const entry of [file, link]) {

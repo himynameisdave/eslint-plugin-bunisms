@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdtemp, writeFile, rm } from 'node:fs/promises';
+import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
@@ -11,7 +11,7 @@ try {
   const fixtureRules = new Map<string, string>();
   const config = join(directory, '.oxlintrc.json');
   const rules = Object.fromEntries(Object.keys(cases).map((name) => [`bun/${name}`, 'error']));
-  await writeFile(
+  await Bun.write(
     config,
     JSON.stringify({
       categories: { correctness: 'off' },
@@ -20,7 +20,7 @@ try {
     }),
   );
   let index = 0;
-  const writes: Promise<void>[] = [];
+  const writes: Promise<number>[] = [];
   for (const [name, suite] of Object.entries(cases) as [
     string,
     {
@@ -36,7 +36,7 @@ try {
       const file = join(directory, `case-${index++}.${extension}`);
       fixtureRules.set(file, `bun(${name})`);
       expected.set(file, 'count' in item ? Number(item.count) : 0);
-      writes.push(writeFile(file, item.code));
+      writes.push(Bun.write(file, item.code));
     }
   }
   await Promise.all(writes);

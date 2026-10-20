@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdtemp, mkdir, rm, writeFile, realpath } from 'node:fs/promises';
+import { mkdtemp, mkdir, rm, realpath } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -14,17 +14,17 @@ try {
     mkdir(alternateDirectory, { recursive: true }),
   ]);
   await Promise.all([
-    writeFile(
+    Bun.write(
       join(packageDirectory, 'package.json'),
       JSON.stringify({
         name: 'conditional',
         exports: { import: './esm.js', require: './cjs.cjs' },
       }),
     ),
-    writeFile(join(packageDirectory, 'esm.js'), 'export {};'),
-    writeFile(join(packageDirectory, 'cjs.cjs'), 'module.exports = {};'),
-    writeFile(join(alternateDirectory, 'index.js'), 'module.exports = {};'),
-    writeFile(join(directory, 'space # percent% unicode-é.js'), 'export {};'),
+    Bun.write(join(packageDirectory, 'esm.js'), 'export {};'),
+    Bun.write(join(packageDirectory, 'cjs.cjs'), 'module.exports = {};'),
+    Bun.write(join(alternateDirectory, 'index.js'), 'module.exports = {};'),
+    Bun.write(join(directory, 'space # percent% unicode-é.js'), 'export {};'),
   ]);
   const source = `console.log(JSON.stringify({
     path: require.resolve('./space # percent% unicode-é.js'),
@@ -36,7 +36,7 @@ try {
     lookup: require.resolve('only-there', { paths: [${JSON.stringify(join(directory, 'alternate'))}] }),
   }));`;
   const files = ['js', 'ts', 'mjs', 'cjs'].map((extension) => join(directory, `entry.${extension}`));
-  await Promise.all(files.map((file) => writeFile(file, source)));
+  await Promise.all(files.map((file) => Bun.write(file, source)));
   for (const file of files) {
     const result = Bun.spawnSync([process.execPath, file]);
     assert.equal(result.exitCode, 0, result.stderr.toString());
