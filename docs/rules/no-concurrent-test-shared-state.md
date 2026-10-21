@@ -2,19 +2,13 @@
 
 📝 Warn about direct writes to file-level variables in concurrent Bun tests.
 
-⚠️ This experimental rule is **opt-in only** and is excluded from all [configs](https://github.com/himynameisdave/eslint-plugin-bunisms#eslint), including `all`.
+⚠️ This experimental rule is _off_ in every [config](https://github.com/himynameisdave/eslint-plugin-bunisms#eslint), including 🌐 `all`. Enable it with `'bun/no-concurrent-test-shared-state': 'warn'`.
 
-Bun's [concurrent tests](https://bun.com/docs/test#concurrent-test-execution) share state within a file and can overlap while awaiting. Keeping mutable state inside each test avoids interference. This rule reports assignments, updates (`++`/`--`), destructuring assignments and `for…in`/`for…of` writes to variables declared in the file's module scope (or top-level CommonJS scope), directly inside an inline `test.concurrent()` or `it.concurrent()` callback. Named imports, import aliases, namespace imports and direct CommonJS `bun:test` bindings are recognized, including static computed properties, `.only`/`.failing` chains and `.concurrent.each()`.
+Bun's [concurrent tests](https://bun.com/docs/test#concurrent-test-execution) share file state and can overlap while awaiting, so mutable state belongs inside each test. The rule reports assignments, updates, destructuring and `for…in`/`for…of` writes to file-level variable, function or class bindings made directly in an inline `test.concurrent()` or `it.concurrent()` callback, including class static blocks, static fields, computed keys and `extends` evaluated there. It recognizes named, aliased, namespace and CommonJS `bun:test` bindings, Bun's unshadowed `test` and `it` globals, `.only`/`.failing` chains and `.concurrent.each()` with a table or template.
 
-The analysis is deliberately narrow: it ignores callback-local and shadowed bindings, imported state, unbound globals, property mutations, mutating methods, helpers, nested functions/classes, indirect callbacks and suite-local variables. It does not infer concurrency from `describe.concurrent`, CLI flags or configuration. Conditional qualifiers and chains containing `.serial`, `.skip`, `.todo` or unknown properties are excluded. No TypeScript type information is required.
+It ignores callback-local and shadowed bindings, imports, property writes, mutating methods, helpers, nested functions, methods, instance fields, indirect callbacks and suite-local variables. It does not infer concurrency from `describe.concurrent`, CLI flags or configuration, and skips conditional qualifiers and chains with `.serial`, `.skip`, `.todo` or unknown properties.
 
-A report identifies shared state, not a proven race; even synchronous writes are reported. Nested synchronization callbacks and `Atomics` calls are outside the analysis, but locks acquired directly in the callback cannot be verified. Keep this rule disabled for deliberately coordinated shared state, or use a targeted lint suppression after review. When tests must share state sequentially, consider [`test.serial`](https://bun.com/docs/test#testserial); moving a binding into the callback changes its lifetime and may require restructuring setup and cleanup. There are no options, autofixes or suggestions. Supports Bun **1.4.0+**; runtime checks on 1.4.0 and 1.4.2 and the initial dogfood scope are recorded in [testing](../testing.md#no-concurrent-test-shared-state-validation).
-
-Enable explicitly after a preset:
-
-```ts
-export default [bun.configs.recommended, { rules: { 'bun/no-concurrent-test-shared-state': 'warn' } }];
-```
+A report flags shared state, not a proven race, and locks taken in the callback cannot be verified. Keep the rule off for deliberately coordinated state, or suppress a reviewed report. Use [`test.serial`](https://bun.com/docs/test#testserial) when tests must share state in order. There are no options, fixes or suggestions. Supports Bun **1.4.0+**; validation is recorded in [testing](../testing.md#no-concurrent-test-shared-state-validation).
 
 ## Examples
 

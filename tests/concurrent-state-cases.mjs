@@ -35,7 +35,6 @@ const valid = [
 ].map((code) => ({ code: prefix + code }));
 valid.push(
   ...[
-    "let counter = 0; test.concurrent('unbound', () => { counter++; });",
     "let counter = 0; function test() {} test.concurrent('local', () => { counter++; });",
     "import { test } from 'vitest'; let counter = 0; test.concurrent('other', () => { counter++; });",
     "import { test } from 'node:test'; let counter = 0; test.concurrent('other', () => { counter++; });",
@@ -53,11 +52,8 @@ valid.push(
 );
 
 // Mark the exact identifier to report; comments remain in the fixture source.
-const invalid = (code, options = {}) => ({
-  code,
-  ...options,
-  count: [...code.matchAll(/\/\*write\*\/(?<identifier>\w+)/gu)].length,
-  errors: [...code.matchAll(/\/\*write\*\/(?<identifier>\w+)/gu)].map((match) => {
+const invalid = (code, options = {}) => {
+  const errors = [...code.matchAll(/\/\*write\*\/(?<identifier>\w+)/gu)].map((match) => {
     const offset = match.index + '/*write*/'.length;
     const preceding = code.slice(0, offset).split('\n');
     const line = preceding.length;
@@ -70,8 +66,9 @@ const invalid = (code, options = {}) => ({
       endColumn: column + match.groups.identifier.length,
       suggestions: [],
     };
-  }),
-});
+  });
+  return { code, ...options, count: errors.length, errors };
+};
 const invalidCases = [
   ...[
     "test.concurrent('increment', () => { /*write*/counter++; });",
@@ -98,6 +95,13 @@ const invalidCases = [
     "test.concurrent.each([1, 2])('each %s', (value) => { /*write*/counter = value; });",
     "test.concurrent.each([1, 2])('shadowed each %s', (counter) => { counter++; }); test.concurrent('next', () => { /*write*/counter++; });",
     'test.concurrent(() => /*write*/counter++);',
+    'test.concurrent(() => { /*write*/counter++; }, 5000);',
+    "test.concurrent('options', { timeout: 5000 }, () => { /*write*/counter++; });",
+    "test.concurrent.each`value`('tagged each', () => { /*write*/counter++; });",
+    "test.concurrent('static block', () => { class Local { static { /*write*/counter++; } } });",
+    "test.concurrent('static field', () => { class Local { static value = /*write*/counter++; } });",
+    "test.concurrent('computed key', () => { class Local { [/*write*/counter++]() {} } });",
+    "test.concurrent('extends', () => { class Local extends (/*write*/counter++, Object) {} });",
     "test.concurrent('multiline', () => {\n  /*write*/counter++;\n});",
   ].map((code) => invalid(prefix + code)),
   ...[
@@ -109,6 +113,10 @@ const invalidCases = [
     "import { test } from 'bun:test'; var counter = 0; test.concurrent('var', () => { /*write*/counter++; });",
     "import { test } from 'bun:test'; export let counter = 0; test.concurrent('export', () => { /*write*/counter++; });",
     "import { test } from 'bun:test'; test.concurrent('later', () => { /*write*/counter++; }); let counter = 0;",
+    "import { test } from 'bun:test'; function helper() {} test.concurrent('function', () => { /*write*/helper = null; });",
+    "import { test } from 'bun:test'; class Shared {} test.concurrent('class', () => { /*write*/Shared = null; });",
+    "let counter = 0; test.concurrent('global', () => { /*write*/counter++; });",
+    "let counter = 0; it.concurrent('global', () => { /*write*/counter++; });",
   ].map((code) => invalid(code)),
   invalid(
     "const { test } = require('bun:test'); let counter = 0; test.concurrent('commonjs', () => { /*write*/counter++; });",

@@ -14,7 +14,8 @@ test('concurrent tests share file state while callback-local state stays isolate
 
 test('only and concurrent qualifiers can be chained in either order', () => {
   const result = Bun.spawnSync([process.execPath, 'test', `${import.meta.dir}/fixtures/concurrent-shared-state.ts`], {
-    env: { ...process.env, CONCURRENT_ONLY: '1' },
+    // Bun rejects .only when CI is set.
+    env: { ...process.env, CI: 'false', CONCURRENT_ONLY: '1' },
   });
   expect(result.stderr.toString()).toContain(' 2 pass');
   expect(result.exitCode).toBe(0);

@@ -117,30 +117,38 @@ September 30, 2026, [issue #12](https://github.com/himynameisdave/eslint-plugin-
   `test.serial` supports tests requiring sequential state. The
   [parallelism guide](https://bun.com/docs/test/parallel#concurrent-tests-within-a-file)
   distinguishes cooperative concurrency from separate worker processes.
-- `tests/concurrent-state-runtime.test.ts` passes on Bun 1.4.0 and 1.4.2.
-  Its subprocess fixture deterministically demonstrates two tests reading the
+- `tests/concurrent-state-runtime.test.ts` passes on Bun 1.4.2 (CI) and
+  1.4.3, with and without `CI=true`; the `.only` child run sets `CI=false`
+  because Bun rejects `.only` in CI. Its subprocess fixture deterministically demonstrates two tests reading the
   same value before either writes (a lost update), callback-local isolation,
   the `it` alias, namespace and CommonJS access, `.each`, `.failing`, both
   orders of `.only`/`.concurrent`, and the skipped/todo boundaries. Promise
   barriers control the interleaving without timing assertions.
-- The initial rule reports only direct writes to file-level variable bindings
-  in inline, explicitly concurrent test callbacks. It does not track object
-  identity, mutating methods, helpers, nested functions/classes, suite-local
-  state, indirect callbacks, inherited concurrency or conditional qualifiers.
+- The rule reports only direct writes to file-level variable, function and
+  class bindings in inline, explicitly concurrent test callbacks, including
+  class static blocks, static fields, computed keys and `extends` evaluated
+  there. It recognizes Bun's unshadowed `test`/`it` globals, any callback
+  position (`(fn, timeout)`, `(name, options, fn)`) and template `.each`. It
+  does not track object identity, mutating methods, helpers, nested
+  functions, methods, instance fields, suite-local state, indirect callbacks,
+  inherited concurrency or conditional qualifiers.
   Nested synchronization callbacks and atomic methods are excluded; arbitrary
   locks acquired in the test body cannot be verified. A finding identifies
   shared state, not proof of a race. There are no options, fixes or suggestions.
-- 164 new JS/TS fixtures (941 shared fixtures total) exercise binding identity,
-  aliases, CommonJS, shadowing, local state, multiple diagnostics, assignments,
-  destructuring and loop writes. ESLint 9.39.5 and 10.11.0 run the built plugin
-  under Node 22; Oxlint 1.85.0 runs the same fixtures with exact message and
-  location assertions for the new rule. `bun run check` and clean tarball
+- 184 new JS/TS fixtures (1007 shared fixtures total) exercise binding
+  identity, aliases, globals, CommonJS, shadowing, local state, multiple
+  diagnostics, assignments, destructuring and loop writes. ESLint 9.39.5 and
+  10.11.0 run the built plugin under Node 22; Oxlint 1.89.0 runs the same
+  fixtures and checks exact locations for every fixture that lists single-line
+  locations, across all rules. With 8000 concurrent tests reading one shared
+  binding, ESLint 9 takes about the same time with the rule on or off. `bun run check` and clean tarball
   consumers with both ESLint majors and Oxlint pass. Preset integration tests
   assert exclusion from `recommended`, `strict` and `all` and explicit opt-in.
-- Read-only scans of 468 JS/TS files found no diagnostics or parse failures:
+- Read-only scans of 474 JS/TS files found no diagnostics or parse failures:
   [Bun's test-runner suite at `2722608`](https://github.com/oven-sh/bun/tree/2722608f474a2d9468e9d1ac3a1eb2fe6e630901/test/js/bun/test)
-  (230 files) and [Elysia at `e037eca`](https://github.com/elysiajs/elysia/tree/e037eca710e7ad193be09cc6615ab0dbe54af914)
-  (238 files). Reviewed Bun's `concurrent.fixture.ts`, `concurrent-max.fixture.ts`,
+  (232 files, including four `concurrent_immediate*.fixture.ts` files that use
+  the `test` global) and [Elysia at `e037eca`](https://github.com/elysiajs/elysia/tree/e037eca710e7ad193be09cc6615ab0dbe54af914)
+  (242 files). Reviewed Bun's `concurrent.fixture.ts`, `concurrent-max.fixture.ts`,
   `concurrent-and-serial.fixture.ts`, `test-on-test-finished.test.ts` and
   `mock/mock-module.test.ts`: their helpers, hook mutations and callback-local
   state correctly stay outside the report boundary. This sample contains no

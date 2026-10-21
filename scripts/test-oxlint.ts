@@ -9,7 +9,7 @@ const directory = await mkdtemp(join(tmpdir(), 'bunisms-oxlint-'));
 try {
   const expected = new Map<string, number>();
   const fixtureRules = new Map<string, string>();
-  type Diagnostic = { message: string; line: number; column: number; endColumn: number };
+  type Diagnostic = { message?: string; line: number; column: number; endLine?: number; endColumn?: number };
   const exactDiagnostics = new Map<string, Diagnostic[]>();
   type Fixture = {
     code: string;
@@ -46,7 +46,11 @@ try {
       const file = join(directory, `case-${index++}.${extension}`);
       fixtureRules.set(file, `bun(${name})`);
       expected.set(file, 'count' in item ? Number(item.count) : 0);
-      if (name === 'no-concurrent-test-shared-state' && 'errors' in item && item.errors) {
+      // Check every single-line location the fixture lists, and its message when given.
+      if (
+        item.errors?.length
+        && item.errors.every((error) => error.endLine === error.line && error.endColumn)
+      ) {
         exactDiagnostics.set(file, item.errors);
       }
       writes.push(Bun.write(file, item.code));
@@ -95,7 +99,15 @@ try {
       },
     );
     assert.deepEqual(
-      locations.toSorted((a: Diagnostic, b: Diagnostic) => a.line - b.line || a.column - b.column),
+      locations
+        .toSorted((a: Diagnostic, b: Diagnostic) => a.line - b.line || a.column - b.column)
+        // Fixtures that use messageId leave the message unchecked.
+        .map(({ message, line, column, endColumn }: Diagnostic, i: number) => ({
+          message: errors[i]?.message && message,
+          line,
+          column,
+          endColumn,
+        })),
       errors.map(({ message, line, column, endColumn }) => ({ message, line, column, endColumn })),
       file,
     );
