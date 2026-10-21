@@ -730,6 +730,11 @@ cases['prefer-mock-restore-in-after-each'] = {
     "const { spyOn } = require('unrelated'); spyOn(object, 'method');",
     "spyOn(object, 'method');",
     "import { mock, spyOn } from 'bun:test'; describe('group', () => { afterEach(() => mock.restore()); spyOn(object, 'method'); });",
+    "import { afterEach, mock, spyOn, describe } from 'bun:test'; describe('a', () => { afterEach(() => mock.restore()); describe('b', () => spyOn(object, 'method')); });",
+    "import { afterEach, spyOn } from 'bun:test'; const spy = spyOn(object, 'method'); afterEach(() => spy.mockRestore());",
+    "import { afterEach, spyOn } from 'bun:test'; afterEach(() => jest.restoreAllMocks()); spyOn(object, 'method');",
+    "import { afterEach, spyOn } from 'bun:test'; afterEach(() => vi.restoreAllMocks()); spyOn(object, 'method');",
+    "import { afterEach, jest, spyOn } from 'bun:test'; afterEach(() => jest.restoreAllMocks()); spyOn(object, 'method');",
   ]),
   invalid: [
     { code: "import { spyOn } from 'bun:test'; spyOn(object, 'method');", count: 1 },
@@ -767,6 +772,14 @@ cases['prefer-mock-restore-in-after-each'] = {
     },
     {
       code: "import { afterEach, mock, spyOn, describe } from 'bun:test'; describe.each([1])('group %d', () => { afterEach(() => mock.restore()); }); describe('other', () => spyOn(object, 'method'));",
+      count: 1,
+    },
+    {
+      code: "import { afterEach, mock, spyOn } from 'bun:test'; xdescribe('group', () => { afterEach(() => mock.restore()); }); spyOn(object, 'method');",
+      count: 1,
+    },
+    {
+      code: "import { afterEach, spyOn } from 'bun:test'; function f(jest) { afterEach(() => jest.restoreAllMocks()); } spyOn(object, 'method');",
       count: 1,
     },
     { code: "import { spyOn } from 'bun:test'; spyOn(object, 'method');", ts: true, count: 1 },
