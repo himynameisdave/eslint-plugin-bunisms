@@ -717,3 +717,120 @@ cases['prefer-import-meta-resolve'] = {
     return item.ts ? [base] : [base, { ...base, ts: true }];
   }),
 };
+cases['prefer-mock-restore-in-after-each'] = {
+  valid: items([
+    "import { afterEach, mock, spyOn } from 'bun:test'; afterEach(() => mock.restore()); test('t', () => spyOn(object, 'method'));",
+    "import * as bunTest from 'bun:test'; bunTest.afterEach(() => bunTest.mock.restore()); bunTest.test('t', () => bunTest.spyOn(object, 'method'));",
+    "import { afterEach as cleanup, mock as mocks, spyOn as watch } from 'bun:test'; cleanup(() => mocks.restore()); test('t', () => watch(object, 'method'));",
+    "import { afterEach, mock, spyOn, describe } from 'bun:test'; describe('group', () => { afterEach(() => mock.restore()); test('t', () => spyOn(object, 'method')); });",
+    "import { spyOn } from 'other'; test('t', () => spyOn(object, 'method'));",
+    "function spyOn() {} test('t', () => spyOn(object, 'method'));",
+    "import { spyOn } from 'bun:test'; function f(spyOn) { spyOn(object, 'method'); }",
+    "function f(require) { const { spyOn } = require('bun:test'); spyOn(object, 'method'); }",
+    "const { spyOn } = require('unrelated'); test('t', () => spyOn(object, 'method'));",
+    "test('t', () => spyOn(object, 'method'));",
+    "import { mock, spyOn } from 'bun:test'; describe('group', () => { afterEach(() => mock.restore()); test('t', () => spyOn(object, 'method')); });",
+    "import { afterEach, mock, spyOn, describe } from 'bun:test'; describe('a', () => { afterEach(() => mock.restore()); describe('b', () => test('t', () => spyOn(object, 'method'))); });",
+    "import { afterEach, spyOn } from 'bun:test'; afterEach(() => other.mockRestore()); test('t', () => spyOn(object, 'method'));",
+    "import { afterEach, spyOn } from 'bun:test'; afterEach(() => jest.restoreAllMocks()); test('t', () => spyOn(object, 'method'));",
+    "import { afterEach, spyOn } from 'bun:test'; afterEach(() => vi.restoreAllMocks()); test('t', () => spyOn(object, 'method'));",
+    "import { afterEach, jest, spyOn } from 'bun:test'; afterEach(() => jest.restoreAllMocks()); test('t', () => spyOn(object, 'method'));",
+    // A spy restored through its own variable, wherever the restore runs.
+    "import { spyOn } from 'bun:test'; test('t', () => { const spy = spyOn(Date, 'now').mockReturnValue(1); try { run(); } finally { spy.mockRestore(); } });",
+    "import { spyOn } from 'bun:test'; test('t', () => { const spy = spyOn(object, 'method'); run(); spy.mockRestore(); });",
+    "import { beforeEach, spyOn } from 'bun:test'; let spy; beforeEach(() => { spy = spyOn(object, 'method'); }); afterAll(() => spy?.mockRestore());",
+    // Shared spies, which an afterEach restore would undo after the first test.
+    "import { spyOn } from 'bun:test'; spyOn(object, 'method');",
+    "import { describe, spyOn } from 'bun:test'; describe('group', () => { spyOn(object, 'method'); });",
+    "import { describe, spyOn } from 'bun:test'; describe.each([1])('group %d', () => { spyOn(object, 'method'); });",
+    "import { beforeAll, spyOn } from 'bun:test'; beforeAll(() => { spyOn(object, 'method'); });",
+    "import { spyOn } from 'bun:test'; beforeAll(() => spyOn(object, 'method'));",
+  ]),
+  invalid: [
+    {
+      code: "import { spyOn } from 'bun:test'; test('t', () => spyOn(object, 'method'));",
+      count: 1,
+      errors: [{ messageId: 'restore', line: 1, column: 51, endLine: 1, endColumn: 56 }],
+    },
+    {
+      code: "import * as bunTest from 'bun:test'; test('t', () => bunTest.spyOn(object, 'method'));",
+      count: 1,
+    },
+    {
+      code: "const { spyOn: watch } = require('bun:test'); test('t', () => watch(object, 'method'));",
+      count: 1,
+    },
+    {
+      code: "import { spyOn } from 'bun:test'; test('t', () => { spyOn(a, 'x'); spyOn(b, 'y'); });",
+      count: 2,
+    },
+    { code: "import { spyOn } from 'bun:test'; function f() { spyOn(object, 'method'); }", count: 1 },
+    { code: "import { spyOn } from 'bun:test'; beforeEach(() => { spyOn(object, 'method'); });", count: 1 },
+    {
+      code: "import { spyOn } from 'bun:test'; function f(spyOn) { spyOn(object, 'method'); } test('t', () => spyOn(a, 'x'));",
+      count: 1,
+    },
+    {
+      code: "import { afterEach, mock, spyOn, describe } from 'bun:test'; describe('group', () => { afterEach(() => mock.restore()); }); describe('other', () => test('t', () => spyOn(object, 'method')));",
+      count: 1,
+    },
+    {
+      code: "import { spyOn } from 'bun:test'; afterEach(() => mock.restore()); test('t', () => spyOn(object, 'method'));",
+      count: 1,
+    },
+    {
+      code: "import { spyOn } from 'bun:test'; function f(afterEach) { afterEach(() => mock.restore()); } test('t', () => spyOn(object, 'method'));",
+      count: 1,
+    },
+    {
+      code: "import { mock, spyOn } from 'bun:test'; mock.restore(); test('t', () => spyOn(object, 'method'));",
+      count: 1,
+    },
+    {
+      code: "import { afterEach, mock, spyOn } from 'bun:test'; afterEach(() => { const later = () => mock.restore(); }); test('t', () => spyOn(object, 'method'));",
+      count: 1,
+    },
+    {
+      code: "import { afterEach, mock, spyOn, describe } from 'bun:test'; describe.only('group', () => { afterEach(() => mock.restore()); }); describe('other', () => test('t', () => spyOn(object, 'method')));",
+      count: 1,
+    },
+    {
+      code: "import { afterEach, mock, spyOn, describe } from 'bun:test'; describe.each([1])('group %d', () => { afterEach(() => mock.restore()); }); describe('other', () => test('t', () => spyOn(object, 'method')));",
+      count: 1,
+    },
+    {
+      code: "import { afterEach, mock, spyOn } from 'bun:test'; xdescribe('group', () => { afterEach(() => mock.restore()); }); test('t', () => spyOn(object, 'method'));",
+      count: 1,
+    },
+    {
+      code: "import { afterEach, spyOn } from 'bun:test'; function f(jest) { afterEach(() => jest.restoreAllMocks()); } test('t', () => spyOn(object, 'method'));",
+      count: 1,
+    },
+    {
+      code: "import { spyOn } from 'bun:test'; test('t', () => { const spy = spyOn(object, 'method'); expect(spy).toHaveBeenCalled(); });",
+      count: 1,
+    },
+    {
+      code: "import { spyOn } from 'bun:test'; test('t', () => { const spy = spyOn(a, 'x'); const other = spyOn(b, 'y'); other.mockRestore(); });",
+      count: 1,
+    },
+    {
+      code: "import { spyOn } from 'bun:test'; test('t', () => { const spy = spyOn(a, 'x'); { const spy = make(); spy.mockRestore(); } });",
+      count: 1,
+    },
+    {
+      code: "import { spyOn } from 'bun:test'; function f(beforeAll) { beforeAll(() => spyOn(object, 'method')); }",
+      count: 1,
+    },
+    {
+      code: "import { spyOn } from 'bun:test'; test('t', () => spyOn(object, 'method'));",
+      ts: true,
+      count: 1,
+    },
+    {
+      code: "const { spyOn } = require('bun:test'); test('t', () => spyOn(object, 'method'));",
+      sourceType: 'commonjs',
+      count: 1,
+    },
+  ],
+};
