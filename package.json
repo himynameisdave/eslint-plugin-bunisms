@@ -58,7 +58,7 @@
     "@types/bun": "^1.4.2",
     "@types/estree": "^1.0.9",
     "@typescript-eslint/parser": "^8.70.1",
-    "eslint": "^9.39.5",
+    "eslint": "^10.13.0",
     "eslint10": "npm:eslint@^10",
     "oxfmt": "0.74.0",
     "oxlint": "^1.89.0",
