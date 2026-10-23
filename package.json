@@ -62,7 +62,7 @@
     "eslint10": "npm:eslint@^10",
     "oxfmt": "0.74.0",
     "oxlint": "^1.89.0",
-    "typescript": "~5.9.3"
+    "typescript": "~7.0.2"
   },
   "peerDependencies": {
     "eslint": ">=9.0.0 <11"
