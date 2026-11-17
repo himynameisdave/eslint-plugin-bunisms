@@ -35,9 +35,16 @@ export function propertyName(node: Node, computed: boolean): string | undefined 
   }
 }
 
+const modified = new WeakMap<Scope.Variable, boolean>();
+
 // A reassigned binding or visibly mutated module object is no longer trustworthy.
+// Cached because files can call one binding thousands of times, such as `test()`.
 function isModified(variable: Scope.Variable): boolean {
-  return variable.references.some((reference) => {
+  const cached = modified.get(variable);
+  if (cached !== undefined) {
+    return cached;
+  }
+  const result = variable.references.some((reference) => {
     if (reference.isWrite() && !reference.init) {
       return true;
     }
@@ -52,6 +59,8 @@ function isModified(variable: Scope.Variable): boolean {
       || (parent?.type === 'UnaryExpression' && parent.operator === 'delete')
     );
   });
+  modified.set(variable, result);
+  return result;
 }
 
 // `default` directly on a module object is the module itself (ESM interop), except `bun:` modules have none.
