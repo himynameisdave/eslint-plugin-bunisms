@@ -12,6 +12,7 @@
     "bun/prefer-import-meta-main": "warn",
     "bun/no-dotenv": "warn",
     "bun/prefer-import-meta-resolve": "warn",
-    "bun/no-late-module-mock": "warn"
+    "bun/no-late-module-mock": "warn",
+    "bun/no-concurrent-test-shared-state": "warn"
   }
 }

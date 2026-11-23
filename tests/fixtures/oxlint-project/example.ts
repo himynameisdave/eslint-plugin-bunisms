@@ -24,3 +24,9 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 if (import.meta.path === Bun.main) console.log('entrypoint');
 
 require.resolve('some-package');
+
+import { test } from 'bun:test';
+let counter: number = 0;
+test.concurrent('shared state', () => {
+  counter++;
+});
